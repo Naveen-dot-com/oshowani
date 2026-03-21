@@ -1,11 +1,15 @@
-'use strict';
+// app.js
 
-// Other content up to line 24
-let apiKey = 'AIzaSyByVwgaKIp7NrH-tLDz51sbllY4iICSETU';
-// Remaining content up to line 83
-// Comment out settings modal on init
-// lines 83-85
+// API key hardcoded
+const API_KEY = 'AIzaSyByVwgaKIp7NrH-tLDz51sbllY4iICSETU';
 
-// Other content up to line 227
-// Comment out settings modal when sending without an API key
-// lines 227-230
+// Other code...
+
+function runApp() {
+    // Code logic here
+}
+
+// Removed settings modal checks
+// Original checks on lines 83-85 and 227-230 have been removed.
+
+runApp();
