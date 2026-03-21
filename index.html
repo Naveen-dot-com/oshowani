@@ -2,66 +2,135 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1a1025">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="OSHOWANI">
-    <meta name="description" content="Seek wisdom from OSHOWANI.">
-    
     <title>OSHOWANI</title>
-    
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
+
+    <!-- History Sidebar Overlay -->
+    <div class="history-overlay" id="history-overlay"></div>
+
+    <!-- History Sidebar -->
+    <div class="history-sidebar" id="history-sidebar">
+        <div class="history-header">
+            <h2>Discourses</h2>
+            <button class="icon-btn" id="close-history-btn" title="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <button class="new-chat-btn" id="new-chat-btn">
+            <i data-feather="plus"></i>
+            New Discourse
+        </button>
+        <div class="history-list" id="history-list"></div>
+    </div>
+
     <div class="app-container">
+
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
+                <button class="icon-btn" id="history-btn" title="Chat History">
+                    <i data-feather="clock"></i>
+                </button>
                 <div class="avatar-container">
-                    <img src="assets/osho-avatar.png" alt="OSHO" class="osho-avatar" id="header-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAiIGR5PSIuMWVtIiBmaWxsPSI1ZmNmY2YiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TzwvdGV4dD48L3N2Zz4='">
-                    <div class="status-dot"></div>
+                    <img src="assets/osho-avatar.png" alt="Oshowani" class="osho-avatar">
+                    <span class="status-dot"></span>
                 </div>
                 <div class="header-info">
-                    <h1>OSHOWANI</h1>
-                    <span class="status-text">Wisdom flows...</span>
+                    <h1>Oshowani</h1>
+                    <span class="status-text">Online</span>
                 </div>
             </div>
-            <button id="settings-btn" class="icon-btn" aria-label="Settings">
-                <i data-feather="settings"></i>
-            </button>
+            <div class="header-right">
+                <button class="icon-btn" id="settings-btn" title="Settings">
+                    <i data-feather="settings"></i>
+                </button>
+            </div>
         </header>
 
         <!-- Chat Area -->
-        <main class="chat-container" id="chat-container">
+        <main class="chat-container">
             <div id="tsparticles"></div>
-            <div class="chat-scroll-area" id="chat-scroll-area">
-                <!-- Messages will be injected here -->
-                <div class="message osho-message first-message">
-                    <div class="message-content">
-                        <p>Beloved... I am here. Ask whatever is in your heart, not your mind. The mind asks out of curiosity, the heart asks out of a deep thirst.</p>
-                    </div>
-                </div>
-            </div>
+            <div class="chat-scroll-area" id="chat-scroll-area"></div>
         </main>
 
-        <!-- Input Area -->
+        <!-- Footer / Input -->
         <footer class="app-footer">
             <div class="input-container">
-                <textarea id="message-input" placeholder="Ask your question..." rows="1" aria-label="Message"></textarea>
-                <button id="send-btn" class="icon-btn send-btn" aria-label="Send">
-                    <i data-feather="send"></i>
+                <textarea id="message-input" placeholder="Ask Oshowani..." rows="1"></textarea>
+                <button class="icon-btn send-btn" id="send-btn" title="Send">
+                    <i data-feather="arrow-up"></i>
+                </button>
+            </div>
+        </footer>
+
+        <!-- Settings Modal (Language only) -->
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="icon-btn" id="close-settings-btn">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="setting-group">
+                    <label for="language-select">Language</label>
+                    <p class="setting-desc">Choose the language for Oshowani's discourses.</p>
+                    <div class="input-with-icon">
+                        <i data-feather="globe"></i>
+                        <select id="language-select" class="custom-select">
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi (हिन्दी)</option>
+                            <option value="Spanish">Spanish (Español)</option>
+                            <option value="French">French (Français)</option>
+                            <option value="German">German (Deutsch)</option>
+                            <option value="Portuguese">Portuguese (Português)</option>
+                            <option value="Italian">Italian (Italiano)</option>
+                            <option value="Japanese">Japanese (日本語)</option>
+                            <option value="Chinese">Chinese (中文)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="primary-btn" id="save-settings-btn">Save Settings</button>
+            </div>
+        </div>
+
+        <!-- Install Banner -->
+        <div class="install-banner" id="install-banner">
+            <div class="install-info">
+                <img src="icons/icon-192.png" alt="Oshowani" class="install-icon">
+                <div>
+                    <strong>Add to Home Screen</strong>
+                    <span>Install for the best experience</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="icon-btn" id="install-btn" title="Install">
+                    <i data-feather="download"></i>
+                </button>
+                <button class="icon-btn" id="close-install-btn" title="Dismiss">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
                 </button>
             </div>
         </footer>
