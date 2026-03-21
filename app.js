@@ -22,7 +22,7 @@ const elements = {
 // Hardcoding API keys on the frontend is heavily discouraged for production as
 // anyone can inspect the code and decode the key. Base64 is NOT encryption, just encoding.
 // Replace 'WU9VUl9CQVNFNjRfRU5DT0RFRF9BUElfS0VZX0hFUkU=' with btoa('YOUR_ACTUAL_API_KEY')
-const ENCRYPTED_API_KEY = 'WU9VUl9CQVNFNjRfRU5DT0RFRF9BUElfS0VZX0hFUkU='; // Base64 placeholder
+const ENCRYPTED_API_KEY = 'AIzaSyDxLMQ4QeGT-ftsBrZbTaQQVi81vOzfH3g'; // Base64 placeholder
 
 // State
 let apiKey = '';
