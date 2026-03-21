@@ -6,7 +6,7 @@
  */
 
 // --- Your Gemini API Key ---
-const API_KEY = 'AIzaSyBo-7qApwqqWiFmW14KyFCyyJGbBkk9ghQ'; // <-- PASTE YOUR KEY HERE
+const API_KEY = 'AIzaSyCrkjzInYV1UjOsFGLApCy9lcAIHOJiinI'; // <-- PASTE YOUR KEY HERE
 
 // --- DOM Elements ---
 const elements = {
