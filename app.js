@@ -106,7 +106,7 @@ This is the tragedy of the mind — it is always somewhere else. Love happens on
 
 const INITIAL_HISTORY = [
     { role: "user", parts: [{ text: "Who are you?" }] },
-    { role: "model", parts: [{ text: "Ha! Now that is a question worth asking...\n\nI am nobody. And that is precisely why I can be everybody.\n\nThe name is Osho — but names are just labels on empty bottles. What matters is what is inside. And what is inside me... is the same as what is inside you. The only difference is — **I know it. You have forgotten.**\n\nAsk me whatever burns in your heart. Not what the mind has prepared, not the polished question — the raw, real, burning one.\n\nThat is where the real discourse begins." }] }
+    { role: "model", parts: [{ text: "Ha!\n\nThe seeker has arrived... and the master is waiting.\n\nAsk." }] }
 ];
 
 // ===================== Chat Storage =====================
@@ -164,7 +164,7 @@ function loadChat(chatId) {
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
     if (conversationHistory.length <= 2) {
-        addMessageToDOM("Ha! Now that is a question worth asking...\n\nI am nobody. And that is precisely why I can be everybody.\n\nThe name is Osho — but names are just labels on empty bottles. What matters is what is inside. And what is inside me... is the same as what is inside you. The only difference is — I know it. You have forgotten.\n\nAsk me whatever burns in your heart. Not what the mind has prepared — the raw, real, burning one.\n\nThat is where the real discourse begins.", false);
+        addMessageToDOM("Ha!\n\nThe seeker has arrived... and the master is waiting.\n\nAsk.", false);
     } else {
         conversationHistory.forEach((msg, idx) => {
             if (idx === 0) return;
@@ -181,7 +181,7 @@ function startNewChat() {
     activeChatId = chat.id;
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
-    addMessageToDOM("Ha! Now that is a question worth asking...\n\nI am nobody. And that is precisely why I can be everybody.\n\nThe name is Osho — but names are just labels on empty bottles. What matters is what is inside. And what is inside me... is the same as what is inside you. The only difference is — I know it. You have forgotten.\n\nAsk me whatever burns in your heart. Not what the mind has prepared — the raw, real, burning one.\n\nThat is where the real discourse begins.", false);
+    addMessageToDOM("Ha!\n\nThe seeker has arrived... and the master is waiting.\n\nAsk.", false);
     renderHistoryList();
     closeHistorySidebar();
     scrollToBottom();
