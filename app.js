@@ -386,7 +386,7 @@ async function handleSend() {
     try {
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-lite:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
