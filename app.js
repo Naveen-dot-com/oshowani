@@ -6,7 +6,7 @@
  */
 
 // --- Your Gemini API Key ---
-const API_KEY = 'AIzaSyCrkjzInYV1UjOsFGLApCy9lcAIHOJiinI'; // <-- PASTE YOUR KEY HERE
+const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // <-- PASTE YOUR KEY HERE
 
 // --- DOM Elements ---
 const elements = {
@@ -196,11 +196,46 @@ function closeHistorySidebar() {
     elements.historyOverlay.classList.remove('active');
 }
 
+// ===================== iOS Keyboard Fix =====================
+
+function setupIOSKeyboardFix() {
+    const container = document.querySelector('.app-container');
+
+    function adjustLayout() {
+        if (window.visualViewport) {
+            const vv = window.visualViewport;
+            container.style.height = vv.height + 'px';
+            container.style.top = vv.offsetTop + 'px';
+            setTimeout(scrollToBottom, 50);
+        }
+    }
+
+    function resetLayout() {
+        container.style.height = '';
+        container.style.top = '';
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', adjustLayout);
+        window.visualViewport.addEventListener('scroll', adjustLayout);
+    }
+
+    // Fallback: listen to focus/blur on textarea
+    elements.messageInput.addEventListener('focus', () => {
+        setTimeout(adjustLayout, 350);
+    });
+
+    elements.messageInput.addEventListener('blur', () => {
+        setTimeout(resetLayout, 100);
+    });
+}
+
 // ===================== Initialization =====================
 
 function init() {
     registerServiceWorker();
     setupEventListeners();
+    setupIOSKeyboardFix(); // iOS keyboard fix
     elements.messageInput.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
@@ -322,7 +357,7 @@ async function handleSend() {
     try {
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
