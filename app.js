@@ -6,7 +6,7 @@
  */
 
 // --- Your Gemini API Key ---
-const API_KEY = 'AIzaSyCrkjzInYV1UjOsFGLApCy9lcAIHOJiinI'; // <-- PASTE YOUR KEY HERE
+const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // <-- PASTE YOUR KEY HERE
 
 // --- DOM Elements ---
 const elements = {
@@ -199,35 +199,34 @@ function closeHistorySidebar() {
 // ===================== iOS Keyboard Fix =====================
 
 function setupIOSKeyboardFix() {
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (!isIOS || !window.visualViewport) return;
+
     const container = document.querySelector('.app-container');
 
-    function adjustLayout() {
-        if (window.visualViewport) {
-            const vv = window.visualViewport;
-            container.style.height = vv.height + 'px';
-            container.style.top = vv.offsetTop + 'px';
-            setTimeout(scrollToBottom, 50);
-        }
-    }
+    const update = () => {
+        const vv = window.visualViewport;
+        // Set the container height to exactly the visible viewport height
+        container.style.height = vv.height + 'px';
+        // Offset from top in case page has scrolled
+        container.style.top = vv.offsetTop + 'px';
+        // Ensure bottom is unset so height controls the size
+        container.style.bottom = 'auto';
 
-    function resetLayout() {
-        container.style.height = '';
-        container.style.top = '';
-    }
+        // Scroll chat to bottom after keyboard resize settles
+        requestAnimationFrame(() => {
+            elements.chatScrollArea.scrollTop = elements.chatScrollArea.scrollHeight;
+        });
+    };
 
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', adjustLayout);
-        window.visualViewport.addEventListener('scroll', adjustLayout);
-    }
+    window.visualViewport.addEventListener('resize', update);
+    window.visualViewport.addEventListener('scroll', update);
 
-    // Fallback: listen to focus/blur on textarea
-    elements.messageInput.addEventListener('focus', () => {
-        setTimeout(adjustLayout, 350);
-    });
-
-    elements.messageInput.addEventListener('blur', () => {
-        setTimeout(resetLayout, 100);
-    });
+    // Run once on load to set initial size
+    update();
 }
 
 // ===================== Initialization =====================
@@ -235,17 +234,21 @@ function setupIOSKeyboardFix() {
 function init() {
     registerServiceWorker();
     setupEventListeners();
-    setupIOSKeyboardFix(); // iOS keyboard fix
+    setupIOSKeyboardFix();
+
     elements.messageInput.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
         if (this.value.trim() === '') this.style.height = 'auto';
     });
+
     const chats = getAllChats();
     chats.length > 0 ? loadChat(chats[0].id) : startNewChat();
+
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
         elements.installBanner.style.display = 'none';
     }
+
     initParticles();
 }
 
@@ -357,7 +360,7 @@ async function handleSend() {
     try {
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
