@@ -1,9 +1,10 @@
+//Hi
 /**
  * OSHOWANI - PWA Chatbot App Logic
  */
 
 // --- Your Gemini API Key (injected by GitHub Actions) ---
-const API_KEY = 'AIzaSyABiNOCZsXw-Jq1e4ZRVq2L-2ULT8H3Sok';
+const API_KEY = 'AIzaSyCPeYetCyz060jvyB2UG2_jF1_S5Lcez2c';
 
 // --- DOM Elements ---
 const elements = {
