@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual">
+    <meta name="theme-color" content="#1a1025">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="OSHOWANI">
+    <meta name="description" content="Seek wisdom from OSHOWANI — the digital discourse of Bhagwan Shree Rajneesh.">
     <title>OSHOWANI</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -129,72 +132,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="app.js"></script>
-</body>
-</html>
-                </button>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Settings</h2>
-                <button id="close-settings-btn" class="icon-btn" aria-label="Close">
-                    <i data-feather="x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-group">
-                    <label for="api-key-input">Gemini API Key</label>
-                    <p class="setting-desc">Required to generate responses. Your key is stored locally on this device and never sent anywhere except Google's servers.</p>
-                    <div class="input-with-icon">
-                        <i data-feather="key"></i>
-                        <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                        <button id="toggle-key-visibility" class="minimal-btn">Show</button>
-                    </div>
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">Get a Gemini API Key <i data-feather="external-link"></i></a>
-                </div>
-                <div class="setting-group">
-                    <label for="language-select">Response Language</label>
-                    <p class="setting-desc">Choose the language for Oshowani's discourses.</p>
-                    <div class="input-with-icon">
-                        <i data-feather="globe"></i>
-                        <select id="language-select" class="custom-select">
-                            <option value="English">English</option>
-                            <option value="Hindi">Hindi</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="setting-group">
-                    <button id="save-settings-btn" class="primary-btn">Save Settings</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PWA Install Prompt (Custom) -->
-    <div class="install-banner" id="install-banner">
-        <div class="install-info">
-            <img src="icons/icon-192.png" alt="App Icon" class="install-icon" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAiIGR5PSIuMWVtIiBmaWxsPSI1ZmNmY2YiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TzwvdGV4dD48L3N2Zz4='">
-            <div>
-                <strong>Install OSHOWANI</strong>
-                <span>Add to Home Screen for the best experience</span>
-            </div>
-        </div>
-        <div class="install-actions">
-            <button id="install-btn" class="small-btn">Install</button>
-            <button id="close-install-btn" class="icon-btn"><i data-feather="x"></i></button>
-        </div>
-    </div>
-
-    <!-- Core Logic & API -->
-    <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-links@3/tsparticles.preset.links.bundle.min.js"></script>
-    <script src="app.js"></script>
-    <script>
-        // Initialize Feather icons
-        feather.replace();
-    </script>
 </body>
 </html>
