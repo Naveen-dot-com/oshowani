@@ -1,11 +1,8 @@
 /**
  * OSHOWANI - PWA Chatbot App Logic
- * =============================================
- * SETUP: Replace the value below with your actual Gemini API key.
- * =============================================
  */
 
-// --- Your Gemini API Key ---
+// --- Your Gemini API Key (injected by GitHub Actions) ---
 const API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
 
 // --- DOM Elements ---
@@ -199,7 +196,6 @@ function closeHistorySidebar() {
 // ===================== iOS Keyboard Fix =====================
 
 function setupIOSKeyboardFix() {
-    // Detect iOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -209,14 +205,9 @@ function setupIOSKeyboardFix() {
 
     const update = () => {
         const vv = window.visualViewport;
-        // Set the container height to exactly the visible viewport height
         container.style.height = vv.height + 'px';
-        // Offset from top in case page has scrolled
         container.style.top = vv.offsetTop + 'px';
-        // Ensure bottom is unset so height controls the size
         container.style.bottom = 'auto';
-
-        // Scroll chat to bottom after keyboard resize settles
         requestAnimationFrame(() => {
             elements.chatScrollArea.scrollTop = elements.chatScrollArea.scrollHeight;
         });
@@ -224,8 +215,6 @@ function setupIOSKeyboardFix() {
 
     window.visualViewport.addEventListener('resize', update);
     window.visualViewport.addEventListener('scroll', update);
-
-    // Run once on load to set initial size
     update();
 }
 
@@ -341,11 +330,6 @@ async function handleSend() {
     const text = elements.messageInput.value.trim();
     if (!text || isGenerating) return;
 
-    if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-        alert('Please set your Gemini API key in app.js (line 9).');
-        return;
-    }
-
     isGenerating = true;
     elements.sendBtn.disabled = true;
     elements.messageInput.value = '';
@@ -360,7 +344,7 @@ async function handleSend() {
     try {
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
