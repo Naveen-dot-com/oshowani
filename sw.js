@@ -1,4 +1,5 @@
-const CACHE_NAME = 'oshowani-cache-v3';
+const CACHE_NAME = 'oshowani-cache-v5';  // ← bump from v3 to v4
+
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -29,10 +30,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Never cache Gemini API calls
     if (event.request.url.includes('generativelanguage.googleapis.com')) return;
 
-    // Network first for HTML, cache fallback for others
+    // Always fetch config.js fresh from network — never cache it
+    if (event.request.url.includes('config.js')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request)
