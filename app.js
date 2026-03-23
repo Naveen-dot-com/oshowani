@@ -1,8 +1,10 @@
+
 /**
  * OSHOWANI - PWA Chatbot App Logic
  */
 
-const API_KEY = window.__O_CFG__?.k || '';
+// --- Your Gemini API Key (injected by GitHub Actions) ---
+const API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
 
 // --- DOM Elements ---
 const elements = {
