@@ -128,6 +128,72 @@
     <script src="app.js"></script>
 </body>
 </html>
+        </main>
+
+        <footer class="app-footer">
+            <div class="input-container">
+                <textarea id="message-input" placeholder="Ask Oshowani..." rows="1"></textarea>
+                <button class="icon-btn send-btn" id="send-btn" title="Send">
+                    <i data-feather="arrow-up"></i>
+                </button>
+            </div>
+        </footer>
+
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="icon-btn" id="close-settings-btn">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="setting-group">
+                    <label for="language-select">Language</label>
+                    <p class="setting-desc">Choose the language for Oshowani's discourses.</p>
+                    <div class="input-with-icon">
+                        <i data-feather="globe"></i>
+                        <select id="language-select" class="custom-select">
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi (हिन्दी)</option>
+                            <option value="Spanish">Spanish (Español)</option>
+                            <option value="French">French (Français)</option>
+                            <option value="German">German (Deutsch)</option>
+                            <option value="Portuguese">Portuguese (Português)</option>
+                            <option value="Italian">Italian (Italiano)</option>
+                            <option value="Japanese">Japanese (日本語)</option>
+                            <option value="Chinese">Chinese (中文)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="primary-btn" id="save-settings-btn">Save Settings</button>
+            </div>
+        </div>
+
+        <div class="install-banner" id="install-banner">
+            <div class="install-info">
+                <img src="icons/icon-192.png" alt="Oshowani" class="install-icon">
+                <div>
+                    <strong>Add to Home Screen</strong>
+                    <span>Install for the best experience</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="icon-btn" id="install-btn" title="Install">
+                    <i data-feather="download"></i>
+                </button>
+                <button class="icon-btn" id="close-install-btn" title="Dismiss">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
         <!-- Chat Area -->
         <main class="chat-container">
             <div id="tsparticles"></div>
