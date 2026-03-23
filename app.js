@@ -4,6 +4,7 @@
  */
 
 // --- Your Gemini API Key (injected by GitHub Actions) ---
+// Comment
 const API_KEY = 'AIzaSyBNHAPlR3vs_hhD54iYFhQWbMCn4HQHdZg';
 
 // --- DOM Elements ---
