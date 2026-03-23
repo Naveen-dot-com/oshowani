@@ -1,6 +1,6 @@
 
 /**
- * OSHOWANI - PWA Chatbot App Logic
+ * OSHOWANI - PWA Chatbot App Logics
  */
 
 // --- Your Gemini API Key (injected by GitHub Actions) ---
