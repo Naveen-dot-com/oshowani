@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.naveen_dot_com.twa",
+        "sha256_cert_fingerprints": ["D8:71:43:24:EB:8F:07:7F:B9:96:B2:85:56:95:A9:73:C1:F5:F5:C9:F0:80:35:11:BC:71:12:81:AB:4F:D6:8F"]
+      }
+    }]
