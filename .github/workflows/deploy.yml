@@ -16,9 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject API Key into app.js
+      - name: Create runtime config
         run: |
-          sed -i "s|YOUR_GEMINI_API_KEY_HERE|${{ secrets.GEMINI_API_KEY }}|g" app.js
+          echo "window.__O_CFG__={k:'${{ secrets.GEMINI_API_KEY }}'};" > config.js
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -27,7 +27,3 @@ jobs:
           publish_dir: ./
           publish_branch: gh-pages
           exclude_assets: '.github'
-
-      - name: Revert app.js after deploy
-        run: |
-          git checkout app.js
