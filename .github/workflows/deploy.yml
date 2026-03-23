@@ -19,9 +19,7 @@ jobs:
       - name: Create runtime config
         run: |
           echo "window.__O_CFG__={k:'${{ secrets.GEMINI_API_KEY }}'};" > config.js
-
-      - name: List files (debug)
-        run: ls -la
+          sed -i '/config\.js/d' .gitignore
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -30,4 +28,3 @@ jobs:
           publish_dir: ./
           publish_branch: gh-pages
           exclude_assets: '.github'
-          keep_files: false
