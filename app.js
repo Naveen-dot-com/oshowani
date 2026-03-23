@@ -3,6 +3,7 @@
  */
 
 // DOM Elements
+// Comment
 const elements = {
     chatScrollArea: document.getElementById('chat-scroll-area'),
     messageInput: document.getElementById('message-input'),
