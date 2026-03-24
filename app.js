@@ -1,10 +1,6 @@
-
 /**
  * OSHOWANI - PWA Chatbot App Logic
  */
-
-// ------ Your Gemini API Key (injected by GitHub Actions) ------
-const API_KEY = window.__O_CFG__?.k || '';
 
 // --- DOM Elements ---
 const elements = {
@@ -34,6 +30,9 @@ let isGenerating = false;
 let deferredPrompt;
 let activeChatId = null;
 let conversationHistory = [];
+
+// --- Cloudflare Worker Proxy URL ---
+const PROXY_URL = 'https://oshowani-proxy.n-k-dubey1997.workers.dev';
 
 // --- System Prompt ---
 const SYSTEM_PROMPT = `
@@ -386,18 +385,15 @@ async function handleSend() {
 
     try {
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPromptFilled }] },
-                    contents: conversationHistory,
-                    generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 1024 }
-                })
-            }
-        );
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemPromptFilled }] },
+                contents: conversationHistory,
+                generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 1024 }
+            })
+        });
         if (!res.ok) {
             const err = await res.json();
             throw new Error(err?.error?.message || `API Error ${res.status}`);
