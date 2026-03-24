@@ -248,88 +248,148 @@ function setupIOSKeyboardFix() {
 }
 
 // ===================== Theme =====================
-
 function injectThemeCSS() {
     const style = document.createElement('style');
     style.id = 'oshowani-theme-css';
     style.textContent = `
         #theme-toggle-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.8;
-            transition: opacity 0.2s, background 0.2s;
-            color: inherit;
+            background: none; border: none; cursor: pointer;
+            padding: 8px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.8; transition: opacity 0.2s, background 0.2s; color: inherit;
         }
         #theme-toggle-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
+        /* ===== TRUE DARK MODE — pure black base ===== */
+        body[data-theme="dark"] {
+            background: #080808;
+        }
+        body[data-theme="dark"] .app-container {
+            background: linear-gradient(160deg, #0d0d0d 0%, #111111 100%);
+        }
+        body[data-theme="dark"] .chat-header {
+            background: rgba(10,10,10,0.97);
+            border-bottom-color: rgba(194,108,29,0.15);
+        }
+        body[data-theme="dark"] .header-btn { color: #d4956a; }
+        body[data-theme="dark"] .avatar-name,
+        body[data-theme="dark"] .header-title { color: #e8d5b7; }
+        body[data-theme="dark"] .status-text { color: rgba(180,140,90,0.6); }
+        body[data-theme="dark"] .osho-message .message-content {
+            background: rgba(18,14,10,0.95);
+            color: #e2d4bc;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.5);
+        }
+        body[data-theme="dark"] .user-message .message-content {
+            background: linear-gradient(135deg, #c26c1d, #a85a15);
+            color: #fff;
+        }
+        body[data-theme="dark"] .chat-footer {
+            background: rgba(10,10,10,0.97);
+            border-top-color: rgba(194,108,29,0.15);
+        }
+        body[data-theme="dark"] .message-input-wrapper,
+        body[data-theme="dark"] .input-wrapper {
+            background: rgba(20,16,12,0.95);
+            border-color: rgba(194,108,29,0.25);
+        }
+        body[data-theme="dark"] #message-input {
+            color: #e2d4bc; background: transparent;
+        }
+        body[data-theme="dark"] #message-input::placeholder {
+            color: rgba(180,140,90,0.35);
+        }
+        body[data-theme="dark"] .history-sidebar {
+            background: #0a0a0a;
+            border-right-color: rgba(194,108,29,0.15);
+        }
+        body[data-theme="dark"] .history-item { color: #c8b89a; }
+        body[data-theme="dark"] .history-item:hover,
+        body[data-theme="dark"] .history-item.active {
+            background: rgba(194,108,29,0.1);
+        }
+        body[data-theme="dark"] .history-empty { color: rgba(180,140,90,0.4); }
+        body[data-theme="dark"] .settings-modal { background: rgba(0,0,0,0.75); }
+        body[data-theme="dark"] .settings-modal-content,
+        body[data-theme="dark"] .modal-content {
+            background: #111111; color: #e2d4bc;
+            border: 1px solid rgba(194,108,29,0.2);
+        }
+        body[data-theme="dark"] .settings-label,
+        body[data-theme="dark"] .modal-subtitle { color: rgba(180,140,90,0.65); }
+        body[data-theme="dark"] select,
+        body[data-theme="dark"] .settings-select {
+            background: #1a1510; color: #e2d4bc;
+            border-color: rgba(194,108,29,0.3);
+        }
+        body[data-theme="dark"] .install-banner {
+            background: rgba(12,10,8,0.98); color: #e2d4bc;
+        }
+        body[data-theme="dark"] .typing-dot { background: #c26c1d; }
+
+        /* ===== LIGHT MODE ===== */
         body[data-theme="light"] { background: #f5ede0; }
-        body[data-theme="light"] .app-container { background: linear-gradient(160deg, #f5ede0 0%, #ecdfd0 100%); }
-        body[data-theme="light"] .chat-header { background: rgba(245,237,224,0.97); border-bottom-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .app-container {
+            background: linear-gradient(160deg, #f5ede0 0%, #ecdfd0 100%);
+        }
+        body[data-theme="light"] .chat-header {
+            background: rgba(245,237,224,0.97);
+            border-bottom-color: rgba(180,130,80,0.2);
+        }
         body[data-theme="light"] .header-btn { color: #5c3d2e; }
         body[data-theme="light"] .avatar-name,
         body[data-theme="light"] .header-title { color: #2c1810; }
         body[data-theme="light"] .status-text { color: rgba(80,50,25,0.65); }
         body[data-theme="light"] .osho-message .message-content {
-            background: rgba(255,252,245,0.97);
-            color: #2c1810;
+            background: rgba(255,252,245,0.97); color: #2c1810;
             box-shadow: 0 2px 14px rgba(0,0,0,0.07);
         }
         body[data-theme="light"] .user-message .message-content {
-            background: linear-gradient(135deg, #c26c1d, #a85a15);
-            color: #fff;
+            background: linear-gradient(135deg, #c26c1d, #a85a15); color: #fff;
         }
-        body[data-theme="light"] .chat-footer { background: rgba(245,237,224,0.97); border-top-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .chat-footer {
+            background: rgba(245,237,224,0.97);
+            border-top-color: rgba(180,130,80,0.2);
+        }
         body[data-theme="light"] .message-input-wrapper,
-        body[data-theme="light"] .input-wrapper { background: rgba(255,252,245,0.92); border-color: rgba(180,130,80,0.35); }
-        body[data-theme="light"] #message-input { color: #2c1810; background: transparent; }
+        body[data-theme="light"] .input-wrapper {
+            background: rgba(255,252,245,0.92);
+            border-color: rgba(180,130,80,0.35);
+        }
+        body[data-theme="light"] #message-input {
+            color: #2c1810; background: transparent;
+        }
         body[data-theme="light"] #message-input::placeholder { color: rgba(100,60,30,0.45); }
-        body[data-theme="light"] .history-sidebar { background: #f0e4d0; border-right-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .history-sidebar {
+            background: #f0e4d0;
+            border-right-color: rgba(180,130,80,0.2);
+        }
         body[data-theme="light"] .history-item { color: #2c1810; }
         body[data-theme="light"] .history-item:hover,
-        body[data-theme="light"] .history-item.active { background: rgba(194,108,29,0.12); }
+        body[data-theme="light"] .history-item.active {
+            background: rgba(194,108,29,0.12);
+        }
         body[data-theme="light"] .history-empty { color: rgba(80,50,25,0.5); }
         body[data-theme="light"] .settings-modal { background: rgba(0,0,0,0.3); }
         body[data-theme="light"] .settings-modal-content,
-        body[data-theme="light"] .modal-content { background: #f5ede0; color: #2c1810; }
+        body[data-theme="light"] .modal-content {
+            background: #f5ede0; color: #2c1810;
+        }
         body[data-theme="light"] .settings-label,
         body[data-theme="light"] .modal-subtitle { color: rgba(80,50,25,0.75); }
         body[data-theme="light"] select,
-        body[data-theme="light"] .settings-select { background: #fff; color: #2c1810; border-color: rgba(180,130,80,0.35); }
-        body[data-theme="light"] .install-banner { background: rgba(245,237,224,0.98); color: #2c1810; }
+        body[data-theme="light"] .settings-select {
+            background: #fff; color: #2c1810;
+            border-color: rgba(180,130,80,0.35);
+        }
+        body[data-theme="light"] .install-banner {
+            background: rgba(245,237,224,0.98); color: #2c1810;
+        }
         body[data-theme="light"] .typing-dot { background: #c26c1d; }
     `;
     document.head.appendChild(style);
 }
 
-function initThemeToggle() {
-    document.body.setAttribute('data-theme', themePref);
-
-    const btn = document.createElement('button');
-    btn.id = 'theme-toggle-btn';
-    btn.className = 'header-btn';
-    btn.setAttribute('title', 'Toggle light/dark mode');
-    btn.setAttribute('aria-label', 'Toggle theme');
-    btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
-
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn && settingsBtn.parentNode) {
-        settingsBtn.parentNode.insertBefore(btn, settingsBtn);
-    }
-
-    btn.addEventListener('click', () => {
-        themePref = themePref === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('oshowani_theme', themePref);
-        document.body.setAttribute('data-theme', themePref);
-        btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
-        feather.replace();
-    });
-}
 
 // ===================== Falling Feathers =====================
 
@@ -339,32 +399,31 @@ let feathersList = [];
 
 class FeatherParticle {
     constructor(w, h, initial) {
-        this.w = w;
-        this.h = h;
+        this.w = w; this.h = h;
         this.reset(initial);
     }
 
     reset(initial) {
         this.x = Math.random() * this.w;
-        this.y = initial ? Math.random() * this.h : -70;
-        this.size = 24 + Math.random() * 26;
-        this.fallSpeed = 0.22 + Math.random() * 0.38;
-        this.angle = (Math.random() - 0.5) * 0.7;
-        this.rotSpeed = (Math.random() - 0.5) * 0.007;
-        this.swayAmp = 0.6 + Math.random() * 1.4;
-        this.swaySpeed = 0.006 + Math.random() * 0.01;
+        this.y = initial ? Math.random() * this.h : -100;
+        this.size = 52 + Math.random() * 38;
+        this.fallSpeed = 0.18 + Math.random() * 0.28;
+        this.angle = (Math.random() - 0.5) * 0.5;
+        this.rotSpeed = (Math.random() - 0.5) * 0.005;
+        this.swayAmp = 0.8 + Math.random() * 1.2;
+        this.swaySpeed = 0.005 + Math.random() * 0.008;
         this.swayPhase = Math.random() * Math.PI * 2;
-        this.opacity = 0.38 + Math.random() * 0.42;
-        this.drift = (Math.random() - 0.5) * 0.12;
+        this.opacity = 0.45 + Math.random() * 0.4;
+        this.drift = (Math.random() - 0.5) * 0.1;
         this.t = Math.random() * 1000;
     }
 
     update() {
         this.t++;
         this.y += this.fallSpeed;
-        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.07 + this.drift;
-        this.angle += this.rotSpeed + Math.sin(this.t * this.swaySpeed * 0.4) * 0.0015;
-        if (this.y > this.h + 80) this.reset(false);
+        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.06 + this.drift;
+        this.angle += this.rotSpeed + Math.sin(this.t * this.swaySpeed * 0.3) * 0.001;
+        if (this.y > this.h + 120) this.reset(false);
     }
 
     draw(ctx, isDark) {
@@ -378,61 +437,93 @@ class FeatherParticle {
 
     _drawShape(ctx, isDark) {
         const s = this.size;
-        const half = s / 2;
-        const quillColor = isDark ? '#d4956a' : '#7a3f10';
-        const barbColor = isDark ? 'rgba(210,160,100,0.82)' : 'rgba(110,55,15,0.78)';
+        const h = s / 2;
+        const w = s * 0.36;
+
+        // Color palette — white/ivory on dark, dark-brown on light
+        const vaneMain   = isDark ? 'rgba(245, 238, 220, 0.92)' : 'rgba(55, 28, 8, 0.88)';
+        const vaneShadow = isDark ? 'rgba(200, 185, 155, 0.5)'  : 'rgba(30, 12, 2, 0.35)';
+        const rachis     = isDark ? 'rgba(210, 190, 155, 1)'    : 'rgba(30, 12, 2, 1)';
+        const barbLine   = isDark ? 'rgba(255, 248, 230, 0.18)' : 'rgba(20, 8, 0, 0.12)';
 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Central quill with slight natural curve
+        // --- Left vane (wider, natural feather asymmetry) ---
         ctx.beginPath();
-        ctx.moveTo(0, -half);
-        ctx.quadraticCurveTo(s * 0.09, s * 0.1, 0, half);
-        ctx.strokeStyle = quillColor;
-        ctx.lineWidth = Math.max(1, s * 0.048);
+        ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(-w * 1.05, -h * 0.5, -w * 1.15, h * 0.18, -w * 0.18, h * 0.78);
+        ctx.bezierCurveTo(-w * 0.08, h * 0.88, 0, h * 0.9, 0, h * 0.82);
+        ctx.closePath();
+        ctx.fillStyle = vaneMain;
+        ctx.fill();
+
+        // Left vane inner shadow for depth
+        ctx.beginPath();
+        ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(-w * 0.55, -h * 0.3, -w * 0.6, h * 0.2, -w * 0.08, h * 0.72);
+        ctx.strokeStyle = vaneShadow;
+        ctx.lineWidth = s * 0.055;
         ctx.stroke();
 
-        // Barbs on both sides
-        const numBarbs = 18;
-        ctx.strokeStyle = barbColor;
+        // --- Right vane (narrower) ---
+        ctx.beginPath();
+        ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(w * 0.78, -h * 0.45, w * 0.82, h * 0.2, w * 0.12, h * 0.78);
+        ctx.bezierCurveTo(w * 0.06, h * 0.88, 0, h * 0.9, 0, h * 0.82);
+        ctx.closePath();
+        ctx.fillStyle = vaneMain;
+        ctx.fill();
 
+        // Right vane inner shadow
+        ctx.beginPath();
+        ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(w * 0.4, -h * 0.3, w * 0.45, h * 0.22, w * 0.06, h * 0.72);
+        ctx.strokeStyle = vaneShadow;
+        ctx.lineWidth = s * 0.04;
+        ctx.stroke();
+
+        // --- Barb texture lines across the vane ---
+        const numBarbs = 26;
+        ctx.strokeStyle = barbLine;
+        ctx.lineWidth = Math.max(0.4, s * 0.009);
         for (let i = 0; i < numBarbs; i++) {
-            const t = i / (numBarbs - 1);
-            const qx = s * 0.09 * Math.sin(t * Math.PI) * 0.45;
-            const qy = -half + t * s;
-            const maxLen = s * 0.36 * Math.sin(t * Math.PI);
-            const downAngle = 0.28 + t * 0.12;
-            ctx.lineWidth = Math.max(0.4, s * 0.011);
-
-            // Right barb
+            const t = i / numBarbs;
+            const qy = -h + t * s * 0.9;
+            const leftW  = w * 1.12 * Math.sin(t * Math.PI * 0.88);
+            const rightW = w * 0.82 * Math.sin(t * Math.PI * 0.88);
+            const droop  = leftW * 0.22;
             ctx.beginPath();
-            ctx.moveTo(qx, qy);
-            ctx.quadraticCurveTo(
-                qx + maxLen * 0.55 * Math.cos(downAngle * 0.7),
-                qy + maxLen * 0.28,
-                qx + maxLen * Math.cos(downAngle),
-                qy + maxLen * Math.sin(downAngle)
-            );
-            ctx.stroke();
-
-            // Left barb
-            ctx.beginPath();
-            ctx.moveTo(qx, qy);
-            ctx.quadraticCurveTo(
-                qx - maxLen * 0.55 * Math.cos(downAngle * 0.7),
-                qy + maxLen * 0.28,
-                qx - maxLen * Math.cos(downAngle),
-                qy + maxLen * Math.sin(downAngle)
-            );
+            ctx.moveTo(-leftW,  qy + droop);
+            ctx.quadraticCurveTo(0, qy + droop * 0.3, rightW, qy + rightW * 0.22);
             ctx.stroke();
         }
 
-        // Soft tip glow
+        // --- Central rachis (tapered, slightly curved) ---
+        const grad = ctx.createLinearGradient(0, -h, 0, h);
+        grad.addColorStop(0, isDark ? 'rgba(235,220,190,0.95)' : 'rgba(40,18,4,0.95)');
+        grad.addColorStop(0.6, isDark ? 'rgba(210,188,148,1)' : 'rgba(25,10,2,1)');
+        grad.addColorStop(1, isDark ? 'rgba(190,165,120,0.85)' : 'rgba(15,6,1,0.7)');
+
         ctx.beginPath();
-        ctx.arc(0, -half + 1, s * 0.028, 0, Math.PI * 2);
-        ctx.fillStyle = quillColor;
-        ctx.globalAlpha = 0.6;
+        ctx.moveTo(0, -h);
+        ctx.quadraticCurveTo(s * 0.03, s * 0.08, 0, h);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = Math.max(1.2, s * 0.052);
+        ctx.stroke();
+
+        // Rachis base taper (calamus)
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.75);
+        ctx.lineTo(0, h);
+        ctx.strokeStyle = isDark ? 'rgba(200,175,130,0.7)' : 'rgba(20,8,2,0.6)';
+        ctx.lineWidth = Math.max(0.8, s * 0.028);
+        ctx.stroke();
+
+        // Tip highlight dot
+        ctx.beginPath();
+        ctx.arc(0, -h + s * 0.025, s * 0.022, 0, Math.PI * 2);
+        ctx.fillStyle = isDark ? 'rgba(255,245,220,0.65)' : 'rgba(15,6,1,0.5)';
         ctx.fill();
     }
 }
