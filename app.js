@@ -248,6 +248,7 @@ function setupIOSKeyboardFix() {
 }
 
 // ===================== Theme =====================
+
 function injectThemeCSS() {
     const style = document.createElement('style');
     style.id = 'oshowani-theme-css';
@@ -260,10 +261,7 @@ function injectThemeCSS() {
         }
         #theme-toggle-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
-        /* ===== TRUE DARK MODE — pure black base ===== */
-        body[data-theme="dark"] {
-            background: #080808;
-        }
+        body[data-theme="dark"] { background: #080808; }
         body[data-theme="dark"] .app-container {
             background: linear-gradient(160deg, #0d0d0d 0%, #111111 100%);
         }
@@ -293,21 +291,15 @@ function injectThemeCSS() {
             background: rgba(20,16,12,0.95);
             border-color: rgba(194,108,29,0.25);
         }
-        body[data-theme="dark"] #message-input {
-            color: #e2d4bc; background: transparent;
-        }
-        body[data-theme="dark"] #message-input::placeholder {
-            color: rgba(180,140,90,0.35);
-        }
+        body[data-theme="dark"] #message-input { color: #e2d4bc; background: transparent; }
+        body[data-theme="dark"] #message-input::placeholder { color: rgba(180,140,90,0.35); }
         body[data-theme="dark"] .history-sidebar {
             background: #0a0a0a;
             border-right-color: rgba(194,108,29,0.15);
         }
         body[data-theme="dark"] .history-item { color: #c8b89a; }
         body[data-theme="dark"] .history-item:hover,
-        body[data-theme="dark"] .history-item.active {
-            background: rgba(194,108,29,0.1);
-        }
+        body[data-theme="dark"] .history-item.active { background: rgba(194,108,29,0.1); }
         body[data-theme="dark"] .history-empty { color: rgba(180,140,90,0.4); }
         body[data-theme="dark"] .settings-modal { background: rgba(0,0,0,0.75); }
         body[data-theme="dark"] .settings-modal-content,
@@ -327,7 +319,6 @@ function injectThemeCSS() {
         }
         body[data-theme="dark"] .typing-dot { background: #c26c1d; }
 
-        /* ===== LIGHT MODE ===== */
         body[data-theme="light"] { background: #f5ede0; }
         body[data-theme="light"] .app-container {
             background: linear-gradient(160deg, #f5ede0 0%, #ecdfd0 100%);
@@ -356,9 +347,7 @@ function injectThemeCSS() {
             background: rgba(255,252,245,0.92);
             border-color: rgba(180,130,80,0.35);
         }
-        body[data-theme="light"] #message-input {
-            color: #2c1810; background: transparent;
-        }
+        body[data-theme="light"] #message-input { color: #2c1810; background: transparent; }
         body[data-theme="light"] #message-input::placeholder { color: rgba(100,60,30,0.45); }
         body[data-theme="light"] .history-sidebar {
             background: #f0e4d0;
@@ -366,15 +355,11 @@ function injectThemeCSS() {
         }
         body[data-theme="light"] .history-item { color: #2c1810; }
         body[data-theme="light"] .history-item:hover,
-        body[data-theme="light"] .history-item.active {
-            background: rgba(194,108,29,0.12);
-        }
+        body[data-theme="light"] .history-item.active { background: rgba(194,108,29,0.12); }
         body[data-theme="light"] .history-empty { color: rgba(80,50,25,0.5); }
         body[data-theme="light"] .settings-modal { background: rgba(0,0,0,0.3); }
         body[data-theme="light"] .settings-modal-content,
-        body[data-theme="light"] .modal-content {
-            background: #f5ede0; color: #2c1810;
-        }
+        body[data-theme="light"] .modal-content { background: #f5ede0; color: #2c1810; }
         body[data-theme="light"] .settings-label,
         body[data-theme="light"] .modal-subtitle { color: rgba(80,50,25,0.75); }
         body[data-theme="light"] select,
@@ -390,6 +375,26 @@ function injectThemeCSS() {
     document.head.appendChild(style);
 }
 
+function initThemeToggle() {
+    document.body.setAttribute('data-theme', themePref);
+    const btn = document.createElement('button');
+    btn.id = 'theme-toggle-btn';
+    btn.className = 'header-btn';
+    btn.setAttribute('title', 'Toggle light/dark mode');
+    btn.setAttribute('aria-label', 'Toggle theme');
+    btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn && settingsBtn.parentNode) {
+        settingsBtn.parentNode.insertBefore(btn, settingsBtn);
+    }
+    btn.addEventListener('click', () => {
+        themePref = themePref === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('oshowani_theme', themePref);
+        document.body.setAttribute('data-theme', themePref);
+        btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
+        feather.replace();
+    });
+}
 
 // ===================== Falling Feathers =====================
 
@@ -399,13 +404,14 @@ let feathersList = [];
 
 class FeatherParticle {
     constructor(w, h, initial) {
-        this.w = w; this.h = h;
+        this.w = w;
+        this.h = h;
         this.reset(initial);
     }
 
     reset(initial) {
         this.x = Math.random() * this.w;
-        this.y = initial ? Math.random() * this.h : -100;
+        this.y = initial ? Math.random() * this.h : -120;
         this.size = 52 + Math.random() * 38;
         this.fallSpeed = 0.18 + Math.random() * 0.28;
         this.angle = (Math.random() - 0.5) * 0.5;
@@ -440,16 +446,14 @@ class FeatherParticle {
         const h = s / 2;
         const w = s * 0.36;
 
-        // Color palette — white/ivory on dark, dark-brown on light
-        const vaneMain   = isDark ? 'rgba(245, 238, 220, 0.92)' : 'rgba(55, 28, 8, 0.88)';
-        const vaneShadow = isDark ? 'rgba(200, 185, 155, 0.5)'  : 'rgba(30, 12, 2, 0.35)';
-        const rachis     = isDark ? 'rgba(210, 190, 155, 1)'    : 'rgba(30, 12, 2, 1)';
-        const barbLine   = isDark ? 'rgba(255, 248, 230, 0.18)' : 'rgba(20, 8, 0, 0.12)';
+        const vaneMain   = isDark ? 'rgba(245,238,220,0.92)' : 'rgba(55,28,8,0.88)';
+        const vaneShadow = isDark ? 'rgba(200,185,155,0.5)'  : 'rgba(30,12,2,0.35)';
+        const barbLine   = isDark ? 'rgba(255,248,230,0.18)' : 'rgba(20,8,0,0.12)';
 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // --- Left vane (wider, natural feather asymmetry) ---
+        // Left vane
         ctx.beginPath();
         ctx.moveTo(0, -h);
         ctx.bezierCurveTo(-w * 1.05, -h * 0.5, -w * 1.15, h * 0.18, -w * 0.18, h * 0.78);
@@ -458,7 +462,7 @@ class FeatherParticle {
         ctx.fillStyle = vaneMain;
         ctx.fill();
 
-        // Left vane inner shadow for depth
+        // Left vane shadow
         ctx.beginPath();
         ctx.moveTo(0, -h);
         ctx.bezierCurveTo(-w * 0.55, -h * 0.3, -w * 0.6, h * 0.2, -w * 0.08, h * 0.72);
@@ -466,7 +470,7 @@ class FeatherParticle {
         ctx.lineWidth = s * 0.055;
         ctx.stroke();
 
-        // --- Right vane (narrower) ---
+        // Right vane
         ctx.beginPath();
         ctx.moveTo(0, -h);
         ctx.bezierCurveTo(w * 0.78, -h * 0.45, w * 0.82, h * 0.2, w * 0.12, h * 0.78);
@@ -475,7 +479,7 @@ class FeatherParticle {
         ctx.fillStyle = vaneMain;
         ctx.fill();
 
-        // Right vane inner shadow
+        // Right vane shadow
         ctx.beginPath();
         ctx.moveTo(0, -h);
         ctx.bezierCurveTo(w * 0.4, -h * 0.3, w * 0.45, h * 0.22, w * 0.06, h * 0.72);
@@ -483,7 +487,7 @@ class FeatherParticle {
         ctx.lineWidth = s * 0.04;
         ctx.stroke();
 
-        // --- Barb texture lines across the vane ---
+        // Barb texture lines
         const numBarbs = 26;
         ctx.strokeStyle = barbLine;
         ctx.lineWidth = Math.max(0.4, s * 0.009);
@@ -494,17 +498,16 @@ class FeatherParticle {
             const rightW = w * 0.82 * Math.sin(t * Math.PI * 0.88);
             const droop  = leftW * 0.22;
             ctx.beginPath();
-            ctx.moveTo(-leftW,  qy + droop);
+            ctx.moveTo(-leftW, qy + droop);
             ctx.quadraticCurveTo(0, qy + droop * 0.3, rightW, qy + rightW * 0.22);
             ctx.stroke();
         }
 
-        // --- Central rachis (tapered, slightly curved) ---
+        // Central rachis
         const grad = ctx.createLinearGradient(0, -h, 0, h);
-        grad.addColorStop(0, isDark ? 'rgba(235,220,190,0.95)' : 'rgba(40,18,4,0.95)');
-        grad.addColorStop(0.6, isDark ? 'rgba(210,188,148,1)' : 'rgba(25,10,2,1)');
-        grad.addColorStop(1, isDark ? 'rgba(190,165,120,0.85)' : 'rgba(15,6,1,0.7)');
-
+        grad.addColorStop(0,   isDark ? 'rgba(235,220,190,0.95)' : 'rgba(40,18,4,0.95)');
+        grad.addColorStop(0.6, isDark ? 'rgba(210,188,148,1)'    : 'rgba(25,10,2,1)');
+        grad.addColorStop(1,   isDark ? 'rgba(190,165,120,0.85)' : 'rgba(15,6,1,0.7)');
         ctx.beginPath();
         ctx.moveTo(0, -h);
         ctx.quadraticCurveTo(s * 0.03, s * 0.08, 0, h);
@@ -512,7 +515,7 @@ class FeatherParticle {
         ctx.lineWidth = Math.max(1.2, s * 0.052);
         ctx.stroke();
 
-        // Rachis base taper (calamus)
+        // Rachis calamus base
         ctx.beginPath();
         ctx.moveTo(0, h * 0.75);
         ctx.lineTo(0, h);
@@ -520,10 +523,11 @@ class FeatherParticle {
         ctx.lineWidth = Math.max(0.8, s * 0.028);
         ctx.stroke();
 
-        // Tip highlight dot
+        // Tip dot
         ctx.beginPath();
         ctx.arc(0, -h + s * 0.025, s * 0.022, 0, Math.PI * 2);
         ctx.fillStyle = isDark ? 'rgba(255,245,220,0.65)' : 'rgba(15,6,1,0.5)';
+        ctx.globalAlpha = 0.6;
         ctx.fill();
     }
 }
