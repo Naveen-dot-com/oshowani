@@ -396,13 +396,13 @@ function initThemeToggle() {
     });
 }
 
-// ===================== Falling Feathers =====================
+// ===================== Dandelion Seeds =====================
 
-let featherCanvas = null;
-let featherCtx = null;
-let feathersList = [];
+let dandelionCanvas = null;
+let dandelionCtx = null;
+let dandelionList = [];
 
-class FeatherParticle {
+class DandelionSeed {
     constructor(w, h, initial) {
         this.w = w;
         this.h = h;
@@ -411,25 +411,29 @@ class FeatherParticle {
 
     reset(initial) {
         this.x = Math.random() * this.w;
-        this.y = initial ? Math.random() * this.h : -120;
-        this.size = 52 + Math.random() * 38;
-        this.fallSpeed = 0.18 + Math.random() * 0.28;
-        this.angle = (Math.random() - 0.5) * 0.5;
-        this.rotSpeed = (Math.random() - 0.5) * 0.005;
-        this.swayAmp = 0.8 + Math.random() * 1.2;
-        this.swaySpeed = 0.005 + Math.random() * 0.008;
+        this.y = initial ? Math.random() * this.h : -60;
+        this.scale = 0.55 + Math.random() * 0.7;
+        this.fallSpeed = 0.18 + Math.random() * 0.25;
+        this.angle = (Math.random() - 0.5) * 0.4;
+        this.rotSpeed = (Math.random() - 0.5) * 0.004;
+        this.swayAmp = 1.0 + Math.random() * 1.5;
+        this.swaySpeed = 0.004 + Math.random() * 0.008;
         this.swayPhase = Math.random() * Math.PI * 2;
-        this.opacity = 0.45 + Math.random() * 0.4;
-        this.drift = (Math.random() - 0.5) * 0.1;
+        this.opacity = 0.55 + Math.random() * 0.38;
+        this.drift = (Math.random() - 0.5) * 0.15;
         this.t = Math.random() * 1000;
+        // Each seed gets a slightly different number of filaments
+        this.numFilaments = 20 + Math.floor(Math.random() * 8);
+        // Filament lengths vary slightly per seed
+        this.filamentLen = 13 + Math.random() * 7;
     }
 
     update() {
         this.t++;
         this.y += this.fallSpeed;
-        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.06 + this.drift;
-        this.angle += this.rotSpeed + Math.sin(this.t * this.swaySpeed * 0.3) * 0.001;
-        if (this.y > this.h + 120) this.reset(false);
+        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.07 + this.drift;
+        this.angle += this.rotSpeed + Math.sin(this.t * this.swaySpeed * 0.4) * 0.0008;
+        if (this.y > this.h + 80) this.reset(false);
     }
 
     draw(ctx, isDark) {
@@ -437,138 +441,115 @@ class FeatherParticle {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         ctx.globalAlpha = this.opacity;
-        this._drawShape(ctx, isDark);
+        this._drawSeed(ctx, isDark);
         ctx.restore();
     }
 
-    _drawShape(ctx, isDark) {
-        const s = this.size;
-        const h = s / 2;
-        const w = s * 0.36;
+    _drawSeed(ctx, isDark) {
+        const s = this.scale;
 
-        const vaneMain   = isDark ? 'rgba(245,238,220,0.92)' : 'rgba(55,28,8,0.88)';
-        const vaneShadow = isDark ? 'rgba(200,185,155,0.5)'  : 'rgba(30,12,2,0.35)';
-        const barbLine   = isDark ? 'rgba(255,248,230,0.18)' : 'rgba(20,8,0,0.12)';
+        // Colors: white on dark, dark slate on light (both clearly visible)
+        const primaryColor   = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(60,45,30,0.90)';
+        const secondaryColor = isDark ? 'rgba(220,220,220,0.70)' : 'rgba(80,60,35,0.65)';
+        const tipColor       = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(50,35,18,0.80)';
+        const stemColor      = isDark ? 'rgba(210,210,210,0.80)' : 'rgba(70,50,25,0.75)';
 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Left vane
-        ctx.beginPath();
-        ctx.moveTo(0, -h);
-        ctx.bezierCurveTo(-w * 1.05, -h * 0.5, -w * 1.15, h * 0.18, -w * 0.18, h * 0.78);
-        ctx.bezierCurveTo(-w * 0.08, h * 0.88, 0, h * 0.9, 0, h * 0.82);
-        ctx.closePath();
-        ctx.fillStyle = vaneMain;
-        ctx.fill();
+        const filLen = this.filamentLen * s;
+        const stemLen = 18 * s;
+        const seedR = 2.2 * s;
+        const n = this.numFilaments;
 
-        // Left vane shadow
+        // --- Stalk / stem going downward from seed ---
         ctx.beginPath();
-        ctx.moveTo(0, -h);
-        ctx.bezierCurveTo(-w * 0.55, -h * 0.3, -w * 0.6, h * 0.2, -w * 0.08, h * 0.72);
-        ctx.strokeStyle = vaneShadow;
-        ctx.lineWidth = s * 0.055;
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, stemLen);
+        ctx.strokeStyle = stemColor;
+        ctx.lineWidth = Math.max(0.6, 1.1 * s);
         ctx.stroke();
 
-        // Right vane
+        // --- Seed body (small oval at bottom of stalk) ---
         ctx.beginPath();
-        ctx.moveTo(0, -h);
-        ctx.bezierCurveTo(w * 0.78, -h * 0.45, w * 0.82, h * 0.2, w * 0.12, h * 0.78);
-        ctx.bezierCurveTo(w * 0.06, h * 0.88, 0, h * 0.9, 0, h * 0.82);
-        ctx.closePath();
-        ctx.fillStyle = vaneMain;
+        ctx.ellipse(0, stemLen, seedR * 0.7, seedR * 1.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = primaryColor;
         ctx.fill();
 
-        // Right vane shadow
-        ctx.beginPath();
-        ctx.moveTo(0, -h);
-        ctx.bezierCurveTo(w * 0.4, -h * 0.3, w * 0.45, h * 0.22, w * 0.06, h * 0.72);
-        ctx.strokeStyle = vaneShadow;
-        ctx.lineWidth = s * 0.04;
-        ctx.stroke();
+        // --- Pappus filaments radiating upward from top of stalk ---
+        for (let i = 0; i < n; i++) {
+            const spreadAngle = (i / n) * Math.PI * 2;
+            // Filaments spread in a hemispherical dome shape — more upward bias
+            const tiltX = Math.sin(spreadAngle) * filLen;
+            const tiltY = -Math.abs(Math.cos(spreadAngle)) * filLen * 0.85 - filLen * 0.25;
 
-        // Barb texture lines
-        const numBarbs = 26;
-        ctx.strokeStyle = barbLine;
-        ctx.lineWidth = Math.max(0.4, s * 0.009);
-        for (let i = 0; i < numBarbs; i++) {
-            const t = i / numBarbs;
-            const qy = -h + t * s * 0.9;
-            const leftW  = w * 1.12 * Math.sin(t * Math.PI * 0.88);
-            const rightW = w * 0.82 * Math.sin(t * Math.PI * 0.88);
-            const droop  = leftW * 0.22;
+            // Main filament line
             ctx.beginPath();
-            ctx.moveTo(-leftW, qy + droop);
-            ctx.quadraticCurveTo(0, qy + droop * 0.3, rightW, qy + rightW * 0.22);
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(tiltX * 0.45, tiltY * 0.3, tiltX, tiltY);
+            ctx.strokeStyle = secondaryColor;
+            ctx.lineWidth = Math.max(0.35, 0.55 * s);
             ctx.stroke();
+
+            // Tiny fluffy tip dot at filament end
+            ctx.beginPath();
+            ctx.arc(tiltX, tiltY, Math.max(1.0, 1.6 * s), 0, Math.PI * 2);
+            ctx.fillStyle = tipColor;
+            ctx.fill();
         }
 
-        // Central rachis
-        const grad = ctx.createLinearGradient(0, -h, 0, h);
-        grad.addColorStop(0,   isDark ? 'rgba(235,220,190,0.95)' : 'rgba(40,18,4,0.95)');
-        grad.addColorStop(0.6, isDark ? 'rgba(210,188,148,1)'    : 'rgba(25,10,2,1)');
-        grad.addColorStop(1,   isDark ? 'rgba(190,165,120,0.85)' : 'rgba(15,6,1,0.7)');
+        // --- Central hub where filaments meet (small bright dot) ---
         ctx.beginPath();
-        ctx.moveTo(0, -h);
-        ctx.quadraticCurveTo(s * 0.03, s * 0.08, 0, h);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = Math.max(1.2, s * 0.052);
-        ctx.stroke();
-
-        // Rachis calamus base
-        ctx.beginPath();
-        ctx.moveTo(0, h * 0.75);
-        ctx.lineTo(0, h);
-        ctx.strokeStyle = isDark ? 'rgba(200,175,130,0.7)' : 'rgba(20,8,2,0.6)';
-        ctx.lineWidth = Math.max(0.8, s * 0.028);
-        ctx.stroke();
-
-        // Tip dot
-        ctx.beginPath();
-        ctx.arc(0, -h + s * 0.025, s * 0.022, 0, Math.PI * 2);
-        ctx.fillStyle = isDark ? 'rgba(255,245,220,0.65)' : 'rgba(15,6,1,0.5)';
-        ctx.globalAlpha = 0.6;
+        ctx.arc(0, 0, Math.max(1.2, 2.2 * s), 0, Math.PI * 2);
+        ctx.fillStyle = primaryColor;
         ctx.fill();
+
+        // Hub glow ring
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(2.0, 3.5 * s), 0, Math.PI * 2);
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(60,45,30,0.18)';
+        ctx.lineWidth = Math.max(0.5, 0.8 * s);
+        ctx.stroke();
     }
 }
 
-function initFeathers() {
+function initDandelions() {
     const old = document.getElementById('tsparticles');
     if (old) old.style.display = 'none';
 
-    featherCanvas = document.createElement('canvas');
-    featherCanvas.id = 'feather-canvas';
-    Object.assign(featherCanvas.style, {
+    dandelionCanvas = document.createElement('canvas');
+    dandelionCanvas.id = 'dandelion-canvas';
+    Object.assign(dandelionCanvas.style, {
         position: 'fixed', top: '0', left: '0',
         width: '100%', height: '100%',
         pointerEvents: 'none', zIndex: '0'
     });
-    document.body.appendChild(featherCanvas);
-    featherCtx = featherCanvas.getContext('2d');
+    document.body.appendChild(dandelionCanvas);
+    dandelionCtx = dandelionCanvas.getContext('2d');
 
-    resizeFeatherCanvas();
-    window.addEventListener('resize', resizeFeatherCanvas);
+    resizeDandelionCanvas();
+    window.addEventListener('resize', resizeDandelionCanvas);
 
-    for (let i = 0; i < 20; i++) {
-        feathersList.push(new FeatherParticle(featherCanvas.width, featherCanvas.height, true));
+    for (let i = 0; i < 22; i++) {
+        dandelionList.push(new DandelionSeed(dandelionCanvas.width, dandelionCanvas.height, true));
     }
 
-    animateFeathers();
+    animateDandelions();
 }
 
-function resizeFeatherCanvas() {
-    if (!featherCanvas) return;
-    featherCanvas.width = window.innerWidth;
-    featherCanvas.height = window.innerHeight;
-    feathersList.forEach(f => { f.w = featherCanvas.width; f.h = featherCanvas.height; });
+function resizeDandelionCanvas() {
+    if (!dandelionCanvas) return;
+    dandelionCanvas.width = window.innerWidth;
+    dandelionCanvas.height = window.innerHeight;
+    dandelionList.forEach(d => { d.w = dandelionCanvas.width; d.h = dandelionCanvas.height; });
 }
 
-function animateFeathers() {
-    if (!featherCtx) return;
-    featherCtx.clearRect(0, 0, featherCanvas.width, featherCanvas.height);
+function animateDandelions() {
+    if (!dandelionCtx) return;
+    dandelionCtx.clearRect(0, 0, dandelionCanvas.width, dandelionCanvas.height);
     const isDark = document.body.getAttribute('data-theme') !== 'light';
-    feathersList.forEach(f => { f.update(); f.draw(featherCtx, isDark); });
-    requestAnimationFrame(animateFeathers);
+    dandelionList.forEach(d => { d.update(); d.draw(dandelionCtx, isDark); });
+    requestAnimationFrame(animateDandelions);
 }
 
 // ===================== Initialization =====================
@@ -593,7 +574,7 @@ function init() {
         elements.installBanner.style.display = 'none';
     }
 
-    initFeathers();
+    initDandelions();
 }
 
 // ===================== Event Listeners =====================
