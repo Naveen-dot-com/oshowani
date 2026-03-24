@@ -2,8 +2,8 @@
     "name": "OSHOWANI",
     "short_name": "OSHOWANI",
     "description": "Seek wisdom from OSHOWANI — the digital discourse of Bhagwan Shree Rajneesh.",
-    "start_url": "./index.html",
-    "scope": "./",
+    "start_url": "/oshowani/",
+    "scope": "/oshowani/",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#1a1025",
@@ -12,25 +12,25 @@
     "categories": ["lifestyle", "education", "health"],
     "icons": [
         {
-            "src": "icons/icon-192.png",
+            "src": "/oshowani/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "icons/icon-192.png",
+            "src": "/oshowani/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "icons/icon-512.png",
+            "src": "/oshowani/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "icons/icon-512.png",
+            "src": "/oshowani/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
@@ -38,14 +38,14 @@
     ],
     "screenshots": [
         {
-            "src": "assets/screenshot-mobile.png",
+            "src": "/oshowani/assets/screenshot-mobile.png",
             "sizes": "390x844",
             "type": "image/png",
             "form_factor": "narrow",
             "label": "OSHOWANI Chat Screen"
         },
         {
-            "src": "assets/screenshot-desktop.png",
+            "src": "/oshowani/assets/screenshot-desktop.png",
             "sizes": "1280x800",
             "type": "image/png",
             "form_factor": "wide",
@@ -57,8 +57,8 @@
             "name": "New Discourse",
             "short_name": "New Chat",
             "description": "Start a new discourse with Oshowani",
-            "url": "./index.html",
-            "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+            "url": "/oshowani/",
+            "icons": [{ "src": "/oshowani/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
         }
     ]
 }
