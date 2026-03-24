@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshowani-cache-v7';  // ← bump from v3 to v4
+const CACHE_NAME = 'oshowani-cache-v8';  // ← bump from v3 to v4
 
 const ASSETS_TO_CACHE = [
     './',
@@ -46,15 +46,18 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request)
-            .then(r => r || fetch(event.request)
-                .then(response => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    return response;
-                })
-            )
-            .catch(() => caches.match('./index.html'))
-    );
+  event.respondWith(
+    caches.match(event.request)
+        .then(r => r || fetch(event.request))
+        .then(response => {
+            // Only cache GET requests — POST cannot be cached
+            if (event.request.method === 'GET') {
+                const clone = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+            }
+            return response;
+        })
+        .catch(() => caches.match('./index.html'))
+);
+
 });
