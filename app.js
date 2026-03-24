@@ -2,7 +2,7 @@
  * OSHOWANI - PWA Chatbot App Logic
  */
 
-// --- DOM Elements ---
+// ---- DOM Elements ----
 const elements = {
     chatScrollArea: document.getElementById('chat-scroll-area'),
     messageInput: document.getElementById('message-input'),
