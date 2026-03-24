@@ -383,7 +383,14 @@ async function handleSend() {
     elements.statusText.textContent = 'Reflecting...';
 
     addMessageToDOM(text, true);
-    conversationHistory.push({ role: "user", parts: [{ text }] });
+    //conversationHistory.push({ role: "user", parts: [{ text }] });
+    const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
+let messageText = text;
+if (currentLang !== 'Auto') {
+    messageText = `[RESPOND ONLY IN ${currentLang.toUpperCase()} — THIS IS MANDATORY]\n\n${text}`;
+}
+conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
+
     updateChatHistory(activeChatId, conversationHistory);
     showTypingIndicator();
 
