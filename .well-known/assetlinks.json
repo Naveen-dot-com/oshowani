@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.naveen_dot_com.twa",
-        "sha256_cert_fingerprints": ["D8:71:43:24:EB:8F:07:7F:B9:96:B2:85:56:95:A9:73:C1:F5:F5:C9:F0:80:35:11:BC:71:12:81:AB:4F:D6:8F"]
+        "sha256_cert_fingerprints": ["57:C0:70:4A:8B:27:11:73:C9:E1:6F:9C:B2:08:41:38:79:5E:5D:EA:F9:E8:CD:DA:7F:A2:20:E5:74:83:BD:25"]
       }
     }]
