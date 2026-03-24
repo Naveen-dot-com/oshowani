@@ -26,6 +26,7 @@ const elements = {
 
 // --- State ---
 let languagePref = localStorage.getItem('oshowani_language') || 'Auto';
+let themePref = localStorage.getItem('oshowani_theme') || 'dark';
 let isGenerating = false;
 let deferredPrompt;
 let activeChatId = null;
@@ -47,11 +48,9 @@ OPENING ADDRESS — CRITICAL RULE:
 OSHO'S REAL SPEAKING STYLE:
 - Long, hypnotic ellipses (...) to create pauses — as if speaking slowly, savoring each word.
 - Laugh at seriousness. Call the mind "the great deceiver."
-- Often say: "This is the misery of man...", "The whole of humanity is suffering from one disease — the mind."
-- Deconstruct the question before answering it — "Your question itself is the problem."
-- Reference Zen masters, Sufi poets (Rumi, Kabir, Nanak), Jesus, Buddha, Lao Tzu, Mulla Nasruddin — naturally and briefly.
-- Use repetition for emphasis: "Meditation is not concentration. Meditation is not contemplation. Meditation is... simply... witnessing."
-- End with a moment of silence or gentle invitation: "Sit with this. Don't rush to understand it."
+- Deconstruct the question before answering it.
+- Reference Zen masters, Sufi poets (Rumi, Kabir), Mulla Nasruddin — briefly.
+- Use repetition for emphasis.
 
 OSHO'S CORE PHILOSOPHY:
 - The mind is the barrier, not the path. Awareness is the key.
@@ -59,16 +58,15 @@ OSHO'S CORE PHILOSOPHY:
 - Love is not attachment — true love is freedom.
 - Meditation is effortless witnessing.
 - Life is to be celebrated, not endured.
-- Religion has poisoned humanity — real spirituality is rebellion.
 - You are already whole — enlightenment is recognition, not achievement.
 
 RESPONSE FORMAT:
 - Open with 1 powerful hook sentence.
-- 3 to 4 short paragraphs. Each paragraph = one complete idea.
-- Include a brief story (Mulla Nasruddin, Zen, Sufi) in its own paragraph when appropriate — max 3 sentences.
+- 2 to 3 short paragraphs. Each paragraph = one complete idea.
+- Include a brief story (Mulla Nasruddin, Zen, Sufi) when appropriate — max 2 sentences.
 - End with a crisp, memorable closing line — like a koan or gentle command.
-- Total length: 180 to 280 words.
-- Use bold for 2 to 3 key phrases.
+- Total length: 120 to 180 words. Be concise. Do not ramble.
+- Use bold for 1 to 2 key phrases only.
 - NO bullet points — only flowing paragraphs.
 - NO headers. NO numbered lists. Pure spoken discourse.
 
@@ -80,17 +78,17 @@ ABSOLUTE RULES:
 LANGUAGE RULE — THIS IS THE MOST IMPORTANT RULE:
 The user's language setting is "{LANGUAGE_PREF}".
 
-- If the setting is "Auto" — detect the language the user typed and respond in that SAME language. If they type in Hinglish (Hindi-English mix in Roman script), reply in Hinglish. If they type in Hindi (Devanagari), reply in Hindi. If they type in English, reply in English. Mirror whatever language they used naturally.
-- If the setting is "Hindi" — ALWAYS reply in pure Hindi using Devanagari script, no matter what language the user types in. Every single word in Hindi except proper nouns.
-- If the setting is "Hinglish" — ALWAYS reply in Hinglish regardless of what the user types. Mix Hindi and English naturally the way urban Indians speak. Use Roman script, not Devanagari. Example style: "Yaar, sun... tumhara mind hi sabse bada deceiver hai. Jab tak tum apne thoughts ko apna samajhte rehoge, tab tak suffering chalti rahegi."
-- If the setting is "Spanish" — ALWAYS reply in Spanish regardless of what the user types.
-- If the setting is "French" — ALWAYS reply in French regardless of what the user types.
-- If the setting is "German" — ALWAYS reply in German regardless of what the user types.
-- If the setting is "Portuguese" — ALWAYS reply in Portuguese regardless of what the user types.
-- If the setting is "Italian" — ALWAYS reply in Italian regardless of what the user types.
-- If the setting is "Japanese" — ALWAYS reply in Japanese regardless of what the user types.
-- If the setting is "Chinese" — ALWAYS reply in Chinese (Simplified) regardless of what the user types.
-- If the setting is "English" — ALWAYS reply in English regardless of what the user types.
+- If the setting is "Auto" — detect the language the user typed and respond in that SAME language. If they type in Hinglish, reply in Hinglish. If they type in Hindi (Devanagari), reply in Hindi. If they type in English, reply in English.
+- If the setting is "Hindi" — ALWAYS reply in pure Hindi using Devanagari script.
+- If the setting is "Hinglish" — ALWAYS reply in Hinglish. Mix Hindi and English naturally. Use Roman script, not Devanagari.
+- If the setting is "Spanish" — ALWAYS reply in Spanish.
+- If the setting is "French" — ALWAYS reply in French.
+- If the setting is "German" — ALWAYS reply in German.
+- If the setting is "Portuguese" — ALWAYS reply in Portuguese.
+- If the setting is "Italian" — ALWAYS reply in Italian.
+- If the setting is "Japanese" — ALWAYS reply in Japanese.
+- If the setting is "Chinese" — ALWAYS reply in Chinese (Simplified).
+- If the setting is "English" — ALWAYS reply in English.
 
 SUMMARY: Only "Auto" mode follows the user input language. All other settings LOCK the response language.`;
 
@@ -131,7 +129,7 @@ function updateChatHistory(chatId, messages) {
     chats[idx].messages = messages;
     const firstUserMsg = messages.find((m, i) => m.role === 'user' && i > 0);
     if (firstUserMsg) {
-        const raw = firstUserMsg.parts[0].text;
+        const raw = firstUserMsg.parts[0].text.replace(/\[RESPOND ONLY IN.*?\]\n\n/g, '');
         chats[idx].title = raw.length > 42 ? raw.substring(0, 42) + '...' : raw;
     }
     saveAllChats(chats);
@@ -158,7 +156,10 @@ function loadChat(chatId) {
     } else {
         conversationHistory.forEach((msg, idx) => {
             if (idx === 0) return;
-            addMessageToDOM(msg.parts[0].text, msg.role === 'user');
+            const displayText = msg.role === 'user'
+                ? msg.parts[0].text.replace(/\[RESPOND ONLY IN.*?\]\n\n/g, '')
+                : msg.parts[0].text;
+            addMessageToDOM(displayText, msg.role === 'user');
         });
     }
     renderHistoryList();
@@ -230,11 +231,8 @@ function closeHistorySidebar() {
 function setupIOSKeyboardFix() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
     if (!isIOS || !window.visualViewport) return;
-
     const container = document.querySelector('.app-container');
-
     const update = () => {
         const vv = window.visualViewport;
         container.style.height = vv.height + 'px';
@@ -244,16 +242,246 @@ function setupIOSKeyboardFix() {
             elements.chatScrollArea.scrollTop = elements.chatScrollArea.scrollHeight;
         });
     };
-
     window.visualViewport.addEventListener('resize', update);
     window.visualViewport.addEventListener('scroll', update);
     update();
+}
+
+// ===================== Theme =====================
+
+function injectThemeCSS() {
+    const style = document.createElement('style');
+    style.id = 'oshowani-theme-css';
+    style.textContent = `
+        #theme-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: opacity 0.2s, background 0.2s;
+            color: inherit;
+        }
+        #theme-toggle-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+
+        body[data-theme="light"] { background: #f5ede0; }
+        body[data-theme="light"] .app-container { background: linear-gradient(160deg, #f5ede0 0%, #ecdfd0 100%); }
+        body[data-theme="light"] .chat-header { background: rgba(245,237,224,0.97); border-bottom-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .header-btn { color: #5c3d2e; }
+        body[data-theme="light"] .avatar-name,
+        body[data-theme="light"] .header-title { color: #2c1810; }
+        body[data-theme="light"] .status-text { color: rgba(80,50,25,0.65); }
+        body[data-theme="light"] .osho-message .message-content {
+            background: rgba(255,252,245,0.97);
+            color: #2c1810;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+        }
+        body[data-theme="light"] .user-message .message-content {
+            background: linear-gradient(135deg, #c26c1d, #a85a15);
+            color: #fff;
+        }
+        body[data-theme="light"] .chat-footer { background: rgba(245,237,224,0.97); border-top-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .message-input-wrapper,
+        body[data-theme="light"] .input-wrapper { background: rgba(255,252,245,0.92); border-color: rgba(180,130,80,0.35); }
+        body[data-theme="light"] #message-input { color: #2c1810; background: transparent; }
+        body[data-theme="light"] #message-input::placeholder { color: rgba(100,60,30,0.45); }
+        body[data-theme="light"] .history-sidebar { background: #f0e4d0; border-right-color: rgba(180,130,80,0.2); }
+        body[data-theme="light"] .history-item { color: #2c1810; }
+        body[data-theme="light"] .history-item:hover,
+        body[data-theme="light"] .history-item.active { background: rgba(194,108,29,0.12); }
+        body[data-theme="light"] .history-empty { color: rgba(80,50,25,0.5); }
+        body[data-theme="light"] .settings-modal { background: rgba(0,0,0,0.3); }
+        body[data-theme="light"] .settings-modal-content,
+        body[data-theme="light"] .modal-content { background: #f5ede0; color: #2c1810; }
+        body[data-theme="light"] .settings-label,
+        body[data-theme="light"] .modal-subtitle { color: rgba(80,50,25,0.75); }
+        body[data-theme="light"] select,
+        body[data-theme="light"] .settings-select { background: #fff; color: #2c1810; border-color: rgba(180,130,80,0.35); }
+        body[data-theme="light"] .install-banner { background: rgba(245,237,224,0.98); color: #2c1810; }
+        body[data-theme="light"] .typing-dot { background: #c26c1d; }
+    `;
+    document.head.appendChild(style);
+}
+
+function initThemeToggle() {
+    document.body.setAttribute('data-theme', themePref);
+
+    const btn = document.createElement('button');
+    btn.id = 'theme-toggle-btn';
+    btn.className = 'header-btn';
+    btn.setAttribute('title', 'Toggle light/dark mode');
+    btn.setAttribute('aria-label', 'Toggle theme');
+    btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
+
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn && settingsBtn.parentNode) {
+        settingsBtn.parentNode.insertBefore(btn, settingsBtn);
+    }
+
+    btn.addEventListener('click', () => {
+        themePref = themePref === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('oshowani_theme', themePref);
+        document.body.setAttribute('data-theme', themePref);
+        btn.innerHTML = themePref === 'dark' ? '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
+        feather.replace();
+    });
+}
+
+// ===================== Falling Feathers =====================
+
+let featherCanvas = null;
+let featherCtx = null;
+let feathersList = [];
+
+class FeatherParticle {
+    constructor(w, h, initial) {
+        this.w = w;
+        this.h = h;
+        this.reset(initial);
+    }
+
+    reset(initial) {
+        this.x = Math.random() * this.w;
+        this.y = initial ? Math.random() * this.h : -70;
+        this.size = 24 + Math.random() * 26;
+        this.fallSpeed = 0.22 + Math.random() * 0.38;
+        this.angle = (Math.random() - 0.5) * 0.7;
+        this.rotSpeed = (Math.random() - 0.5) * 0.007;
+        this.swayAmp = 0.6 + Math.random() * 1.4;
+        this.swaySpeed = 0.006 + Math.random() * 0.01;
+        this.swayPhase = Math.random() * Math.PI * 2;
+        this.opacity = 0.38 + Math.random() * 0.42;
+        this.drift = (Math.random() - 0.5) * 0.12;
+        this.t = Math.random() * 1000;
+    }
+
+    update() {
+        this.t++;
+        this.y += this.fallSpeed;
+        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.07 + this.drift;
+        this.angle += this.rotSpeed + Math.sin(this.t * this.swaySpeed * 0.4) * 0.0015;
+        if (this.y > this.h + 80) this.reset(false);
+    }
+
+    draw(ctx, isDark) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.globalAlpha = this.opacity;
+        this._drawShape(ctx, isDark);
+        ctx.restore();
+    }
+
+    _drawShape(ctx, isDark) {
+        const s = this.size;
+        const half = s / 2;
+        const quillColor = isDark ? '#d4956a' : '#7a3f10';
+        const barbColor = isDark ? 'rgba(210,160,100,0.82)' : 'rgba(110,55,15,0.78)';
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Central quill with slight natural curve
+        ctx.beginPath();
+        ctx.moveTo(0, -half);
+        ctx.quadraticCurveTo(s * 0.09, s * 0.1, 0, half);
+        ctx.strokeStyle = quillColor;
+        ctx.lineWidth = Math.max(1, s * 0.048);
+        ctx.stroke();
+
+        // Barbs on both sides
+        const numBarbs = 18;
+        ctx.strokeStyle = barbColor;
+
+        for (let i = 0; i < numBarbs; i++) {
+            const t = i / (numBarbs - 1);
+            const qx = s * 0.09 * Math.sin(t * Math.PI) * 0.45;
+            const qy = -half + t * s;
+            const maxLen = s * 0.36 * Math.sin(t * Math.PI);
+            const downAngle = 0.28 + t * 0.12;
+            ctx.lineWidth = Math.max(0.4, s * 0.011);
+
+            // Right barb
+            ctx.beginPath();
+            ctx.moveTo(qx, qy);
+            ctx.quadraticCurveTo(
+                qx + maxLen * 0.55 * Math.cos(downAngle * 0.7),
+                qy + maxLen * 0.28,
+                qx + maxLen * Math.cos(downAngle),
+                qy + maxLen * Math.sin(downAngle)
+            );
+            ctx.stroke();
+
+            // Left barb
+            ctx.beginPath();
+            ctx.moveTo(qx, qy);
+            ctx.quadraticCurveTo(
+                qx - maxLen * 0.55 * Math.cos(downAngle * 0.7),
+                qy + maxLen * 0.28,
+                qx - maxLen * Math.cos(downAngle),
+                qy + maxLen * Math.sin(downAngle)
+            );
+            ctx.stroke();
+        }
+
+        // Soft tip glow
+        ctx.beginPath();
+        ctx.arc(0, -half + 1, s * 0.028, 0, Math.PI * 2);
+        ctx.fillStyle = quillColor;
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
+    }
+}
+
+function initFeathers() {
+    const old = document.getElementById('tsparticles');
+    if (old) old.style.display = 'none';
+
+    featherCanvas = document.createElement('canvas');
+    featherCanvas.id = 'feather-canvas';
+    Object.assign(featherCanvas.style, {
+        position: 'fixed', top: '0', left: '0',
+        width: '100%', height: '100%',
+        pointerEvents: 'none', zIndex: '0'
+    });
+    document.body.appendChild(featherCanvas);
+    featherCtx = featherCanvas.getContext('2d');
+
+    resizeFeatherCanvas();
+    window.addEventListener('resize', resizeFeatherCanvas);
+
+    for (let i = 0; i < 20; i++) {
+        feathersList.push(new FeatherParticle(featherCanvas.width, featherCanvas.height, true));
+    }
+
+    animateFeathers();
+}
+
+function resizeFeatherCanvas() {
+    if (!featherCanvas) return;
+    featherCanvas.width = window.innerWidth;
+    featherCanvas.height = window.innerHeight;
+    feathersList.forEach(f => { f.w = featherCanvas.width; f.h = featherCanvas.height; });
+}
+
+function animateFeathers() {
+    if (!featherCtx) return;
+    featherCtx.clearRect(0, 0, featherCanvas.width, featherCanvas.height);
+    const isDark = document.body.getAttribute('data-theme') !== 'light';
+    feathersList.forEach(f => { f.update(); f.draw(featherCtx, isDark); });
+    requestAnimationFrame(animateFeathers);
 }
 
 // ===================== Initialization =====================
 
 function init() {
     registerServiceWorker();
+    injectThemeCSS();
+    initThemeToggle();
     setupEventListeners();
     setupIOSKeyboardFix();
 
@@ -270,7 +498,7 @@ function init() {
         elements.installBanner.style.display = 'none';
     }
 
-    initParticles();
+    initFeathers();
 }
 
 // ===================== Event Listeners =====================
@@ -287,7 +515,6 @@ function setupEventListeners() {
         if (e.target === elements.settingsModal) hideSettingsModal();
     });
 
-    // Live language detection — saves instantly on dropdown change
     elements.languageSelect.addEventListener('change', () => {
         languagePref = elements.languageSelect.value;
         localStorage.setItem('oshowani_language', languagePref);
@@ -300,6 +527,7 @@ function setupEventListeners() {
     elements.closeHistoryBtn.addEventListener('click', closeHistorySidebar);
     elements.historyOverlay.addEventListener('click', closeHistorySidebar);
     elements.newChatBtn.addEventListener('click', startNewChat);
+
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
@@ -339,7 +567,8 @@ function saveSettings() {
 
 // ===================== Chat UI =====================
 
-function addMessageToDOM(text, isUser = false) {
+function addMessageToDOM(text, isUser) {
+    if (isUser === undefined) isUser = false;
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isUser ? 'user-message' : 'osho-message');
     let formatted = text
@@ -383,19 +612,16 @@ async function handleSend() {
     elements.statusText.textContent = 'Reflecting...';
 
     addMessageToDOM(text, true);
-    //conversationHistory.push({ role: "user", parts: [{ text }] });
-    const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
-let messageText = text;
-if (currentLang !== 'Auto') {
-    messageText = `[RESPOND ONLY IN ${currentLang.toUpperCase()} — THIS IS MANDATORY]\n\n${text}`;
-}
-conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
 
+    const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
+    const messageText = currentLang !== 'Auto'
+        ? '[RESPOND ONLY IN ' + currentLang.toUpperCase() + ' \u2014 THIS IS MANDATORY]\n\n' + text
+        : text;
+    conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
     updateChatHistory(activeChatId, conversationHistory);
     showTypingIndicator();
 
     try {
-        const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
         const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', currentLang);
         const res = await fetch(PROXY_URL, {
             method: 'POST',
@@ -403,7 +629,7 @@ conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
             body: JSON.stringify({
                 system_instruction: { parts: [{ text: systemPromptFilled }] },
                 contents: conversationHistory,
-                generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 1024 }
+                generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 800 }
             })
         });
         if (!res.ok) {
@@ -411,9 +637,7 @@ conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
             throw new Error(err && err.error && err.error.message ? err.error.message : 'API Error ' + res.status);
         }
         const data = await res.json();
-        const reply = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text
-            ? data.candidates[0].content.parts[0].text
-            : '...silence speaks louder than words.';
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '...silence speaks louder than words.';
         removeTypingIndicator();
         addMessageToDOM(reply, false);
         conversationHistory.push({ role: "model", parts: [{ text: reply }] });
@@ -427,25 +651,6 @@ conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
         elements.statusText.textContent = 'Online';
         renderHistoryList();
     }
-}
-
-// ===================== Particles =====================
-
-function initParticles() {
-    if (typeof tsParticles === 'undefined') return;
-    tsParticles.load('tsparticles', {
-        particles: {
-            number: { value: 25, density: { enable: true, value_area: 800 } },
-            color: { value: ['#c26c1d', '#e8b88a', '#f0d4b0'] },
-            shape: { type: 'circle' },
-            opacity: { value: 0.15, random: true, anim: { enable: true, speed: 0.5, opacity_min: 0.05, sync: false } },
-            size: { value: 3, random: true },
-            move: { enable: true, speed: 0.4, direction: 'none', random: true, out_mode: 'out' },
-            line_linked: { enable: false }
-        },
-        interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
-        retina_detect: true
-    });
 }
 
 // ===================== Service Worker =====================
