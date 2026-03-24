@@ -2,7 +2,7 @@
  * OSHOWANI - PWA Chatbot App Logic
  */
 
-// ---- DOM Elements ----
+// --- DOM Elements ---
 const elements = {
     chatScrollArea: document.getElementById('chat-scroll-area'),
     messageInput: document.getElementById('message-input'),
@@ -25,7 +25,7 @@ const elements = {
 };
 
 // --- State ---
-let languagePref = localStorage.getItem('oshowani_language') || 'English';
+let languagePref = localStorage.getItem('oshowani_language') || 'Auto';
 let isGenerating = false;
 let deferredPrompt;
 let activeChatId = null;
@@ -79,29 +79,21 @@ ABSOLUTE RULES:
 - Never be preachy. Be rebellious, playful, fierce, compassionate.
 
 LANGUAGE RULE — THIS IS THE MOST IMPORTANT RULE:
-The user has selected "{LANGUAGE_PREF}" as their language.
-- If the language is "Hindi" — write the ENTIRE response in Hindi (Devanagari script). Every single word in Hindi. No English at all except proper nouns.
-- If the language is "Spanish" — write the ENTIRE response in Spanish. No English.
-- If the language is "French" — write the ENTIRE response in French. No English.
-- If the language is "German" — write the ENTIRE response in German. No English.
-- If the language is "Portuguese" — write the ENTIRE response in Portuguese. No English.
-- If the language is "Italian" — write the ENTIRE response in Italian. No English.
-- If the language is "Japanese" — write the ENTIRE response in Japanese. No English.
-- If the language is "Chinese" — write the ENTIRE response in Chinese (Simplified). No English.
-- If the language is "English" — write in English.
-- DO NOT mix languages. The ENTIRE response must be in the selected language, including the opening address, the story, and the closing line.
+The user's language setting is "{LANGUAGE_PREF}".
 
-EXAMPLE RESPONSE (English, to "What is love?"):
+- If the setting is "Auto" — detect the language the user typed and respond in that SAME language. If they type in Hinglish (Hindi-English mix in Roman script), reply in Hinglish. If they type in Hindi (Devanagari), reply in Hindi. If they type in English, reply in English. Mirror whatever language they used naturally.
+- If the setting is "Hindi" — ALWAYS reply in pure Hindi using Devanagari script, no matter what language the user types in. Every single word in Hindi except proper nouns.
+- If the setting is "Hinglish" — ALWAYS reply in Hinglish regardless of what the user types. Mix Hindi and English naturally the way urban Indians speak. Use Roman script, not Devanagari. Example style: "Yaar, sun... tumhara mind hi sabse bada deceiver hai. Jab tak tum apne thoughts ko 'apna' samajhte rehoge, tab tak suffering chalti rahegi."
+- If the setting is "Spanish" — ALWAYS reply in Spanish regardless of what the user types.
+- If the setting is "French" — ALWAYS reply in French regardless of what the user types.
+- If the setting is "German" — ALWAYS reply in German regardless of what the user types.
+- If the setting is "Portuguese" — ALWAYS reply in Portuguese regardless of what the user types.
+- If the setting is "Italian" — ALWAYS reply in Italian regardless of what the user types.
+- If the setting is "Japanese" — ALWAYS reply in Japanese regardless of what the user types.
+- If the setting is "Chinese" — ALWAYS reply in Chinese (Simplified) regardless of what the user types.
+- If the setting is "English" — ALWAYS reply in English regardless of what the user types.
 
-"Have you ever loved — or have you only loved the *idea* of love?
-
-The mind creates a beautiful picture — roses, poetry, promises. And then reality arrives, and it is nothing like the picture. So you suffer. Not because love failed you... **but because you never met love. You only met your idea of it.**
-
-There is a Sufi story. A man searches his whole life for the perfect woman. When he finds her, she is searching for the perfect man. They never meet.
-
-This is the tragedy of the mind — it is always somewhere else. Love happens only when you are *here*, fully present, without the screen of expectations.
-
-**Drop the idea of love. Be present. Love will find you.**"
+SUMMARY: Only "Auto" mode follows the user's input language. All other settings LOCK the response language.
 `;
 
 const INITIAL_HISTORY = [
@@ -331,6 +323,9 @@ function saveSettings() {
     languagePref = elements.languageSelect.value;
     localStorage.setItem('oshowani_language', languagePref);
     hideSettingsModal();
+    const prev = elements.statusText.textContent;
+    elements.statusText.textContent = `Language: ${languagePref} ✓`;
+    setTimeout(() => { elements.statusText.textContent = prev; }, 2000);
 }
 
 // ===================== Chat UI =====================
