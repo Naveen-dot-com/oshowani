@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oshowani-cache-v5';  // ← bump from v3 to v4
+const CACHE_NAME = 'oshowani-cache-v6';  // ← bump from v3 to v4
 
 const ASSETS_TO_CACHE = [
     './',
