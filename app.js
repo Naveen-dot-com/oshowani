@@ -26,7 +26,7 @@ const elements = {
 
 // --- State ---
 let languagePref = localStorage.getItem('oshowani_language') || 'Auto';
-let themePref = localStorage.getItem('oshowani_theme') || 'dark';
+let themePref = localStorage.getItem('oshowani_theme') || 'light';
 let isGenerating = false;
 let deferredPrompt;
 let activeChatId = null;
