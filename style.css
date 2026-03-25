@@ -94,7 +94,7 @@ body {
     position: absolute; width: 100%; height: 100%;
     top: 0; left: 0; z-index: 0;
     pointer-events: none;
-    opacity: 0.14;   /* very subtle — just ambience, not distraction */
+    opacity: 0.14;
 }
 #tsparticles {
     position: absolute; width: 100%; height: 100%;
@@ -109,7 +109,6 @@ body {
     position: relative; min-height: 0;
 }
 
-/* Strong warm scrim — completely blocks dandelions from showing through bubbles */
 .chat-container::before {
     content: '';
     position: absolute; inset: 0; z-index: 1;
@@ -134,7 +133,6 @@ body {
     padding: calc(14px + var(--sat, 0px)) 16px 14px;
     z-index: 10; flex-shrink: 0;
 
-    /* Fully opaque — zero dandelion bleed */
     background: rgb(238, 230, 216);
     border-bottom: 1px solid rgba(255,255,255,0.75);
     box-shadow:
@@ -200,7 +198,7 @@ body {
 
 /* ===================== MESSAGES ===================== */
 .message {
-    max-width: 92%;          /* wider = fewer awkward line breaks on mobile */
+    max-width: 92%;
     display: flex; flex-direction: column;
     animation: slideUpFadeIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
     position: relative; z-index: 2;
@@ -213,18 +211,11 @@ body {
     to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* --- Osho bubble ---
- * KEY CHANGES:
- * 1. font-size: 17px — down from 19px, less awkward breaks, more text per line
- * 2. font-weight: 500 — thicker strokes on thin serif = dramatically more readable
- * 3. color: #1e1408 — rich dark brown, high contrast on warm white
- * 4. line-height: 1.75 — generous spacing for a discourse feel
- * 5. background fully opaque — dandelions cannot show through
- */
+/* --- Osho bubble --- */
 .osho-message .message-content {
     background: rgb(253, 249, 240);
-    border: 1px solid rgba(255, 255, 255, 0.90);
-    border-left: 3px solid rgba(194, 108, 29, 0.35);  /* subtle amber left accent */
+    border: 1px solid rgba(255,255,255,0.90);
+    border-left: 3px solid rgba(194, 108, 29, 0.35);
     border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
     padding: 16px 18px;
     font-family: var(--font-osho);
@@ -246,8 +237,7 @@ body {
     border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
     padding: 12px 16px;
     font-size: 15px; font-weight: 500;
-    line-height: 1.5;
-    color: #fff;
+    line-height: 1.5; color: #fff;
     box-shadow:
         0 4px 16px var(--primary-glow),
         0 1px 4px rgba(0,0,0,0.10),
@@ -278,7 +268,6 @@ body {
     padding: 10px 16px calc(10px + var(--sab, 0px));
     z-index: 10; flex-shrink: 0;
 
-    /* Fully opaque */
     background: rgb(238, 230, 216);
     border-top: 1px solid rgba(255,255,255,0.75);
     box-shadow:
@@ -522,13 +511,13 @@ textarea::placeholder { color: var(--text-muted); font-weight: 400; }
 
 /* ===================== DARK MODE ===================== */
 body[data-theme="dark"]::before {
-    background-color: #0d0b08;
+    background-color: #1a1410;
     background-image: none;
 }
 body[data-theme="dark"]::after {
     background:
-        radial-gradient(circle at 15% 22%, rgba(194,108,29,0.28) 0%, transparent 42%),
-        radial-gradient(circle at 80% 70%, rgba(180,90,20,0.20)  0%, transparent 40%);
+        radial-gradient(circle at 15% 22%, rgba(194,108,29,0.32) 0%, transparent 42%),
+        radial-gradient(circle at 80% 70%, rgba(180,90,20,0.24)  0%, transparent 40%);
 }
 body[data-theme="dark"] {
     color: #ecdec8;
@@ -540,15 +529,15 @@ body[data-theme="dark"] #dandelion-canvas { opacity: 0.14; }
 body[data-theme="dark"] #tsparticles      { opacity: 0.18; }
 
 body[data-theme="dark"] .chat-container::before {
-    background: rgba(8, 5, 2, 0.72);
+    background: rgba(12, 8, 4, 0.55);
 }
 
 body[data-theme="dark"] .app-header {
-    background: rgb(18, 12, 6);
-    border-bottom-color: rgba(255,255,255,0.08);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.40);
+    background: rgb(30, 20, 10);
+    border-bottom-color: rgba(255,255,255,0.10);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.30);
 }
-body[data-theme="dark"] .status-dot      { border-color: rgb(18,12,6); }
+body[data-theme="dark"] .status-dot      { border-color: rgb(30,20,10); }
 body[data-theme="dark"] .header-info h1  { color: rgba(255,245,225,0.94); }
 body[data-theme="dark"] .status-text     { color: rgba(255,255,255,0.44); }
 
@@ -561,13 +550,13 @@ body[data-theme="dark"] .icon-btn:hover { background: rgba(255,255,255,0.16); co
 
 /* Dark Osho bubble */
 body[data-theme="dark"] .osho-message .message-content {
-    background: rgb(34, 22, 10);
-    border-color: rgba(255,255,255,0.08);
-    border-left-color: rgba(194,108,29,0.50);
-    color: rgba(255, 245, 218, 0.94);
+    background: rgb(48, 32, 14);
+    border-color: rgba(255,255,255,0.10);
+    border-left-color: rgba(194,108,29,0.55);
+    color: rgba(255, 248, 228, 0.96);
     box-shadow:
-        0 2px 16px rgba(0,0,0,0.40),
-        inset 0 1px 0 rgba(255,255,255,0.07);
+        0 2px 16px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.08);
 }
 body[data-theme="dark"] .osho-message .message-content strong {
     color: rgba(255,185,90,0.96);
@@ -575,9 +564,9 @@ body[data-theme="dark"] .osho-message .message-content strong {
 body[data-theme="dark"] .typing-dot { background: rgba(255,255,255,0.45); }
 
 body[data-theme="dark"] .app-footer {
-    background: rgb(18, 12, 6);
-    border-top-color: rgba(255,255,255,0.08);
-    box-shadow: 0 -2px 16px rgba(0,0,0,0.35);
+    background: rgb(30, 20, 10);
+    border-top-color: rgba(255,255,255,0.10);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.25);
 }
 body[data-theme="dark"] .input-container {
     background: rgba(255,255,255,0.08);
@@ -598,9 +587,10 @@ body[data-theme="dark"] .send-btn {
 
 body[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.55); }
 body[data-theme="dark"] .modal-content {
-    background: rgba(20,13,6,0.99);
-    border-color: rgba(255,255,255,0.09);
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
+    background: rgba(30, 20, 10, 0.99);
+    border-color: rgba(255,255,255,0.10);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.45),
+                inset 0 1.5px 0 rgba(255,255,255,0.09);
 }
 body[data-theme="dark"] .modal-header h2     { color: rgba(255,245,225,0.92); }
 body[data-theme="dark"] .setting-group label { color: rgba(255,245,225,0.82); }
@@ -617,11 +607,11 @@ body[data-theme="dark"] .input-with-icon:focus-within {
 body[data-theme="dark"] .custom-select { color: rgba(255,245,225,0.88); }
 
 body[data-theme="dark"] .history-sidebar {
-    background: rgba(15,10,4,0.99);
-    border-right-color: rgba(255,255,255,0.08);
-    box-shadow: 4px 0 32px rgba(0,0,0,0.65);
+    background: rgba(28, 18, 8, 0.99);
+    border-right-color: rgba(255,255,255,0.10);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.50);
 }
-body[data-theme="dark"] .history-header      { border-bottom-color: rgba(255,255,255,0.07); }
+body[data-theme="dark"] .history-header      { border-bottom-color: rgba(255,255,255,0.08); }
 body[data-theme="dark"] .history-header h2   { color: rgba(255,245,225,0.90); }
 body[data-theme="dark"] .history-item:hover  { background: rgba(255,255,255,0.07); }
 body[data-theme="dark"] .history-item.active { background: rgba(194,108,29,0.15); }
@@ -630,8 +620,9 @@ body[data-theme="dark"] .history-item.active .history-item-title { color: rgba(2
 body[data-theme="dark"] .history-empty       { color: rgba(255,255,255,0.28); }
 
 body[data-theme="dark"] .install-banner {
-    background: rgba(20,13,6,0.99);
-    border-color: rgba(255,255,255,0.09);
+    background: rgba(30, 20, 10, 0.99);
+    border-color: rgba(255,255,255,0.10);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.40);
 }
 body[data-theme="dark"] .install-info strong { color: rgba(255,245,225,0.92); }
 body[data-theme="dark"] .install-info span   { color: rgba(255,255,255,0.45); }
@@ -663,11 +654,9 @@ body[data-theme="dark"] .install-info span   { color: rgba(255,255,255,0.45); }
         box-shadow: none; background: transparent; margin: 0;
     }
 
-    /* Desktop — dandelions are beautiful here */
     #dandelion-canvas { opacity: 0.50; }
     #tsparticles      { opacity: 0.55; }
 
-    /* Lighter scrim on desktop */
     .chat-container::before { background: rgba(232,222,206,0.20); }
 
     .app-header {
@@ -683,7 +672,6 @@ body[data-theme="dark"] .install-info span   { color: rgba(255,255,255,0.45); }
         backdrop-filter: blur(28px) saturate(180%);
     }
 
-    /* Osho bubble on desktop — larger and translucent */
     .osho-message .message-content {
         font-size: 20px;
         line-height: 1.75;
@@ -693,7 +681,7 @@ body[data-theme="dark"] .install-info span   { color: rgba(255,255,255,0.45); }
         backdrop-filter: blur(20px) saturate(180%);
     }
 
-    .message     { max-width: 80%; }
+    .message      { max-width: 80%; }
     .user-message { max-width: 70%; }
     .chat-scroll-area { padding: 36px 8%; }
     .modal-overlay { background: rgba(0,0,0,0.10); }
@@ -704,17 +692,17 @@ body[data-theme="dark"] .install-info span   { color: rgba(255,255,255,0.45); }
     body[data-theme="dark"] #tsparticles      { opacity: 0.45; }
     body[data-theme="dark"] .chat-container::before { background: rgba(8,5,2,0.30); }
     body[data-theme="dark"] .app-header {
-        background: rgba(16,10,4,0.82);
+        background: rgba(30,20,10,0.82);
         -webkit-backdrop-filter: blur(28px) saturate(160%);
         backdrop-filter: blur(28px) saturate(160%);
     }
     body[data-theme="dark"] .app-footer {
-        background: rgba(16,10,4,0.82);
+        background: rgba(30,20,10,0.82);
         -webkit-backdrop-filter: blur(28px) saturate(160%);
         backdrop-filter: blur(28px) saturate(160%);
     }
     body[data-theme="dark"] .osho-message .message-content {
-        background: rgba(34,22,10,0.75);
+        background: rgba(48,32,14,0.75);
         -webkit-backdrop-filter: blur(16px) saturate(160%);
         backdrop-filter: blur(16px) saturate(160%);
     }
