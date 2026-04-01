@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1a1025">
+    <meta name="theme-color" content="#008080">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="OSHOWANI">
@@ -14,11 +14,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     
@@ -26,28 +21,51 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
+
+        <!-- Title Bar -->
         <header class="app-header">
             <div class="header-left">
                 <div class="avatar-container">
-                    <img src="assets/osho-avatar.png" alt="OSHO" class="osho-avatar" id="header-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAiIGR5PSIuMWVtIiBmaWxsPSI1ZmNmY2YiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TzwvdGV4dD48L3N2Zz4='">
+                    <img src="assets/osho-avatar.png" alt="OSHO" class="osho-avatar" id="header-avatar"
+                        onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiNmZmYiPk88L3RleHQ+PC9zdmc+'">
                     <div class="status-dot"></div>
                 </div>
                 <div class="header-info">
-                    <h1>OSHOWANI</h1>
-                    <span class="status-text">Wisdom flows...</span>
+                    <h1>OSHOWANI — Wisdom Chat</h1>
+                    <span class="status-text">Ready</span>
                 </div>
             </div>
-            <button id="settings-btn" class="icon-btn" aria-label="Settings">
-                <i data-feather="settings"></i>
-            </button>
+            <!-- Win2K title-bar buttons: minimize, maximize, close -->
+            <div style="display:flex;gap:2px;align-items:center;">
+                <button class="icon-btn" aria-label="Minimize" title="Minimize">_</button>
+                <button class="icon-btn" aria-label="Maximize" title="Maximize">&#9633;</button>
+                <button id="settings-btn" class="icon-btn" aria-label="Settings / Close" title="Settings" style="font-weight:bold;">✕</button>
+            </div>
         </header>
+
+        <!-- Menu Bar -->
+        <nav class="win-menubar" role="menubar" aria-label="Application menu">
+            <span role="menuitem" tabindex="0">File</span>
+            <span role="menuitem" tabindex="0">Edit</span>
+            <span role="menuitem" tabindex="0">View</span>
+            <span role="menuitem" tabindex="0" id="menu-settings-btn" style="cursor:pointer;">Tools</span>
+            <span role="menuitem" tabindex="0">Help</span>
+        </nav>
+
+        <!-- Toolbar -->
+        <div class="win-toolbar" role="toolbar" aria-label="Toolbar">
+            <button class="toolbar-btn" title="New Chat">New</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" title="Clear History">Clear</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" id="toolbar-settings-btn" title="Settings">Settings</button>
+        </div>
 
         <!-- Chat Area -->
         <main class="chat-container" id="chat-container">
             <div id="tsparticles"></div>
             <div class="chat-scroll-area" id="chat-scroll-area">
-                <!-- Messages will be injected here -->
+                <!-- Initial greeting message -->
                 <div class="message osho-message first-message">
                     <div class="message-content">
                         <p>Beloved... I am here. Ask whatever is in your heart, not your mind. The mind asks out of curiosity, the heart asks out of a deep thirst.</p>
@@ -56,30 +74,39 @@
             </div>
         </main>
 
+        <!-- Status Bar -->
+        <div class="win-statusbar" role="status" aria-live="polite">
+            <div class="statusbar-panel">
+                <span class="status-text">Wisdom flows...</span>
+            </div>
+            <div class="statusbar-panel small">Connected</div>
+            <div class="statusbar-panel small">v1.0</div>
+        </div>
+
         <!-- Input Area -->
         <footer class="app-footer">
             <div class="input-container">
-                <textarea id="message-input" placeholder="Ask your question..." rows="1" aria-label="Message"></textarea>
-                <button id="send-btn" class="icon-btn send-btn" aria-label="Send">
+                <textarea id="message-input" placeholder="Type your question here..." rows="1" aria-label="Message input"></textarea>
+                <button id="send-btn" class="icon-btn send-btn" aria-label="Send message">
                     <i data-feather="send"></i>
                 </button>
             </div>
         </footer>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settings-modal">
+    <!-- Settings Modal (Win2K Dialog) -->
+    <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Settings</h2>
-                <button id="close-settings-btn" class="icon-btn" aria-label="Close">
+                <h2 id="dialog-title">Settings</h2>
+                <button id="close-settings-btn" class="icon-btn" aria-label="Close dialog">
                     <i data-feather="x"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="setting-group">
                     <label for="api-key-input">Gemini API Key</label>
-                    <p class="setting-desc">Required to generate responses. Your key is stored locally on this device and never sent anywhere except Google's servers.</p>
+                    <p class="setting-desc">Required to generate responses. Your key is stored locally and never sent anywhere except Google's servers.</p>
                     <div class="input-with-icon">
                         <i data-feather="key"></i>
                         <input type="password" id="api-key-input" placeholder="AIzaSy...">
@@ -87,28 +114,30 @@
                     </div>
                     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">Get a Gemini API Key <i data-feather="external-link"></i></a>
                 </div>
+                <div class="win-divider"></div>
                 <div class="setting-group">
                     <label for="language-select">Response Language</label>
                     <p class="setting-desc">Choose the language for Oshowani's discourses.</p>
-                    <div class="input-with-icon">
-                        <i data-feather="globe"></i>
-                        <select id="language-select" class="custom-select">
-                            <option value="English">English</option>
-                            <option value="Hindi">Hindi</option>
-                        </select>
-                    </div>
+                    <select id="language-select" class="custom-select">
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                    </select>
                 </div>
-                <div class="setting-group">
-                    <button id="save-settings-btn" class="primary-btn">Save Settings</button>
+                <div class="win-divider"></div>
+                <div class="setting-group" style="flex-direction:row;justify-content:flex-end;gap:6px;">
+                    <button id="save-settings-btn" class="primary-btn" style="width:auto;padding:4px 20px;">OK</button>
+                    <button id="cancel-settings-btn" class="primary-btn" style="width:auto;padding:4px 16px;">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PWA Install Prompt (Custom) -->
-    <div class="install-banner" id="install-banner">
+    <!-- PWA Install Banner -->
+    <div class="install-banner" id="install-banner" role="alert">
+        <div class="install-banner-title">New Hardware Found</div>
         <div class="install-info">
-            <img src="icons/icon-192.png" alt="App Icon" class="install-icon" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAiIGR5PSIuMWVtIiBmaWxsPSI1ZmNmY2YiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TzwvdGV4dD48L3N2Zz4='">
+            <img src="icons/icon-192.png" alt="App Icon" class="install-icon"
+                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2QyODEzNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiNmZmYiPk88L3RleHQ+PC9zdmc+'">
             <div>
                 <strong>Install OSHOWANI</strong>
                 <span>Add to Home Screen for the best experience</span>
@@ -116,7 +145,7 @@
         </div>
         <div class="install-actions">
             <button id="install-btn" class="small-btn">Install</button>
-            <button id="close-install-btn" class="icon-btn"><i data-feather="x"></i></button>
+            <button id="close-install-btn" class="small-btn">Cancel</button>
         </div>
     </div>
 
@@ -124,8 +153,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-links@3/tsparticles.preset.links.bundle.min.js"></script>
     <script src="app.js"></script>
     <script>
-        // Initialize Feather icons
         feather.replace();
+
+        // Hook extra menu/toolbar settings triggers
+        document.getElementById('menu-settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.add('active');
+        });
+        document.getElementById('toolbar-settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.add('active');
+        });
+        document.getElementById('cancel-settings-btn').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.remove('active');
+        });
     </script>
 </body>
 </html>
