@@ -5,6 +5,7 @@
     "start_url": "/oshowani/",
     "scope": "/oshowani/",
     "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
     "orientation": "portrait",
     "background_color": "#1a1025",
     "theme_color": "#c26c1d",
