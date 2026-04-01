@@ -1,41 +1,44 @@
+/* ============================================
+   OSHOWANI — Windows 2000 / Microsoft Classic
+   ============================================ */
+
 :root {
-    /* Color Palette - Modern Apple Glassmorphism */
-    --bg-color: #f6f8fb;
-    /* Soft, vibrant, modern abstract mesh gradient */
-    --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,0.05) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%), radial-gradient(at 0% 100%, hsla(22,100%,77%,0.2) 0, transparent 50%);
-    
-    /* Liquid Glass Variables */
-    --glass-bg: rgba(255, 255, 255, 0.4); /* Strong transparency */
-    --glass-border: rgba(255, 255, 255, 0.7); /* Sharp white glass edge */
-    --glass-blur: blur(40px) saturate(180%); /* Apple style intense blur and saturation */
-    
-    --surface-solid: #ffffff;
-    --text-main: #1a1a24;
-    --text-muted: #6b6b7a;
-    --primary: #c26c1d; 
-    --primary-glow: rgba(194, 108, 29, 0.3);
-    --accent: #b46b2b; 
-    --success: #34c759; /* Apple green */
-    --error: #ff3b30; /* Apple red */
-    
-    /* Shapes & Shadows */
-    --radius-xl: 32px;
-    --radius-lg: 20px;
-    --radius-md: 12px;
-    --radius-sm: 8px;
-    
-    /* Liquid shadow for depth */
-    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-    --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.03);
-    
+    /* Windows 2000 System Colors */
+    --win-bg:          #d4d0c8;   /* Classic Windows gray desktop */
+    --win-surface:     #d4d0c8;   /* Control / window background */
+    --win-white:       #ffffff;
+    --win-dark-border: #808080;
+    --win-darker:      #404040;
+    --win-black:       #000000;
+
+    /* 3D Button bevel (light top/left, dark bottom/right) */
+    --bevel-light:  #ffffff;
+    --bevel-mid:    #d4d0c8;
+    --bevel-shadow: #808080;
+    --bevel-dark:   #404040;
+
+    /* Title-bar gradient */
+    --titlebar-from: #0a246a;
+    --titlebar-to:   #a6caf0;
+
+    /* Accent / highlight (classic Windows selection blue) */
+    --win-select:   #0a246a;
+    --win-select-text: #ffffff;
+
+    /* Message bubbles */
+    --bubble-osho-bg:  #ffffff;
+    --bubble-user-bg:  #0a246a;
+    --bubble-user-text: #ffffff;
+
     /* Typography */
-    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --font-osho: 'Cormorant Garamond', serif;
-    
+    --font-ui: "MS Sans Serif", "Microsoft Sans Serif", "Tahoma", Arial, sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
+
     --sat: env(safe-area-inset-top);
     --sab: env(safe-area-inset-bottom);
 }
 
+/* ── Reset ── */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -45,180 +48,269 @@
 
 body {
     font-family: var(--font-ui);
-    background-color: var(--bg-color);
-    background-image: var(--bg-gradient);
-    background-attachment: fixed;
-    color: var(--text-main);
+    font-size: 11px;
+    background-color: #008080; /* classic teal desktop */
+    background-image:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(0,0,0,0.03) 2px,
+            rgba(0,0,0,0.03) 4px
+        );
+    color: var(--win-black);
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
     display: flex;
     justify-content: center;
-    -webkit-font-smoothing: antialiased;
+    align-items: stretch;
+    image-rendering: pixelated;
 }
 
-/* Base App Layout */
+/* ── 3D bevel mixins via utility classes ── */
+.raised {
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    outline: 1px solid var(--bevel-shadow);
+    outline-offset: -3px;
+}
+
+.sunken {
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+/* ── App Container — the "window" ── */
 .app-container {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 600px;
+    max-width: 640px;
     height: 100%;
     position: relative;
-    /* Apple glass effect */
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-glass);
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    box-shadow: 2px 2px 0 var(--bevel-dark), inset 1px 1px 0 var(--bevel-mid);
 }
 
-/* Header */
+/* ── Title Bar ── */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: calc(16px + var(--sat, 0px)) 20px 16px;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 1px 1px rgba(0,0,0,0.02);
-    z-index: 10;
+    padding: calc(3px + var(--sat, 0px)) 4px 3px 6px;
+    background: linear-gradient(to right, var(--titlebar-from), var(--titlebar-to));
+    min-height: 28px;
+    user-select: none;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
 }
 
 .avatar-container {
     position: relative;
-    width: 44px;
-    height: 44px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
 }
 
 .osho-avatar {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     object-fit: cover;
-    border: 1.5px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    image-rendering: pixelated;
+    /* no border-radius — flat square icon look */
 }
 
 .status-dot {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    background-color: var(--success);
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    bottom: -2px;
+    right: -2px;
+    width: 6px;
+    height: 6px;
+    background-color: #00ff00;
+    border: 1px solid #000;
 }
 
 .header-info {
     display: flex;
     flex-direction: column;
+    line-height: 1.1;
 }
 
 .header-info h1 {
-    font-family: var(--font-osho);
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    color: var(--text-main);
-    margin-bottom: 2px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
 .status-text {
-    font-size: 13px;
-    color: var(--text-muted);
+    font-size: 9px;
+    color: rgba(255,255,255,0.8);
+    font-weight: normal;
 }
 
-/* Buttons */
+/* Title bar control buttons */
 .icon-btn {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-soft);
-    color: var(--text-muted);
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    color: var(--win-black);
     cursor: pointer;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 20px;
+    height: 18px;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: none;
+    font-size: 11px;
+    font-weight: bold;
+    font-family: var(--font-ui);
+    padding: 0;
+    line-height: 1;
 }
 
-.icon-btn:hover, .icon-btn:active {
-    background: rgba(255, 255, 255, 0.8);
-    color: var(--primary);
-    transform: scale(1.05);
+.icon-btn:hover {
+    background: var(--win-surface);
 }
 
-.primary-btn {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 14px 24px;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 16px;
+.icon-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+/* Override feather icon size inside title buttons */
+.icon-btn svg {
+    width: 10px;
+    height: 10px;
+    stroke-width: 2.5px;
+}
+
+/* ── Menu Bar ── */
+.win-menubar {
+    display: flex;
+    align-items: center;
+    background: var(--win-surface);
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--bevel-shadow);
+    gap: 2px;
+    font-size: 11px;
+}
+
+.win-menubar span {
+    padding: 2px 6px;
+    cursor: default;
+}
+
+.win-menubar span:hover {
+    background: var(--win-select);
+    color: var(--win-select-text);
+}
+
+/* ── Toolbar ── */
+.win-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    background: var(--win-surface);
+    border-bottom: 2px solid var(--bevel-shadow);
+    gap: 2px;
+}
+
+.toolbar-btn {
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    padding: 2px 8px;
+    font-family: var(--font-ui);
+    font-size: 11px;
     cursor: pointer;
-    width: 100%;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px var(--primary-glow);
-    margin-top: 10px;
+    color: var(--win-black);
 }
 
-.primary-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px var(--primary-glow);
+.toolbar-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
 
-/* Chat Area */
+.toolbar-sep {
+    width: 1px;
+    height: 18px;
+    background: linear-gradient(to bottom, var(--bevel-dark), var(--bevel-light));
+    margin: 0 2px;
+}
+
+/* ── Chat Area ── */
 .chat-container {
     flex: 1;
     overflow: hidden;
     position: relative;
+    /* Classic sunken / inset panel */
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+    margin: 4px 4px 0 4px;
+    background: var(--win-white);
 }
 
 .chat-scroll-area {
     height: 100%;
-    overflow-y: auto;
-    padding: 24px 20px;
+    overflow-y: scroll;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    scrollbar-width: none;
+    gap: 6px;
+    /* Classic Windows scrollbar */
+    scrollbar-width: auto;
+    scrollbar-color: var(--win-surface) var(--win-white);
     position: relative;
     z-index: 1;
+    background: var(--win-white);
 }
+
 .chat-scroll-area::-webkit-scrollbar {
-    display: none;
+    width: 16px;
+}
+.chat-scroll-area::-webkit-scrollbar-track {
+    background: var(--win-surface);
+    border-left: 1px solid var(--bevel-shadow);
+}
+.chat-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+}
+.chat-scroll-area::-webkit-scrollbar-button {
+    background: var(--win-surface);
+    display: block;
+    height: 16px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
 }
 
 #tsparticles {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    z-index: 0;
-    pointer-events: none; /* Let clicks pass through if needed, though tsparticles can handle interactivity via its own canvas */
+    display: none; /* Disable particles — too modern */
 }
 
-/* Messages */
+/* ── Messages ── */
 .message {
-    max-width: 85%;
+    max-width: 90%;
     display: flex;
     flex-direction: column;
-    animation: slideUpFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: none;
 }
 
 .osho-message {
@@ -230,157 +322,202 @@ body {
 }
 
 .message-content {
-    padding: 14px 18px;
-    position: relative;
+    padding: 6px 10px;
+    font-size: 11px;
     line-height: 1.5;
+    position: relative;
 }
 
-/* Osho's bubbles are frosted glass */
+/* Osho bubble — raised white panel */
 .osho-message .message-content {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
-    box-shadow: var(--shadow-glass);
-    font-family: var(--font-osho);
-    font-size: 19px;
-    color: var(--text-main);
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12px;
+    color: var(--win-black);
 }
 
-/* User's bubbles are a vibrant solid */
+/* User bubble — classic Windows "selected" blue */
 .user-message .message-content {
-    background: var(--primary); /* Saffron Accent #c26c1d */
-    color: white;
-    border: 1px solid rgba(0,0,0,0.15); /* Slightly stronger border to make it pop */
-    border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
-    box-shadow: 0 4px 15px var(--primary-glow), var(--shadow-soft);
-    font-size: 15px;
-    font-weight: 500;
+    background: var(--bubble-user-bg);
+    color: var(--bubble-user-text);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    font-family: var(--font-ui);
+    font-size: 11px;
 }
 
-@keyframes slideUpFadeIn {
-    from { opacity: 0; transform: translateY(15px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+/* Label above each message */
+.osho-message::before {
+    content: "OSHOWANI";
+    font-size: 9px;
+    font-weight: bold;
+    color: var(--bevel-dark);
+    margin-bottom: 1px;
+    font-family: var(--font-ui);
+}
+
+.user-message::before {
+    content: "You";
+    font-size: 9px;
+    font-weight: bold;
+    color: var(--bevel-dark);
+    margin-bottom: 1px;
+    font-family: var(--font-ui);
+    align-self: flex-end;
 }
 
 /* Formatting inside messages */
 .message-content p {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 .message-content p:last-child {
     margin-bottom: 0;
 }
 .message-content strong {
-    color: var(--primary);
-    font-weight: 700;
+    color: inherit;
+    font-weight: bold;
 }
 
-/* Typing Indicator (Apple iMessage style) */
+/* ── Typing Indicator ── */
 .typing-dots {
     display: inline-flex;
     gap: 4px;
     align-items: center;
-    height: 20px;
+    height: 14px;
 }
 
 .typing-dot {
-    width: 6px;
-    height: 6px;
-    background-color: var(--text-muted);
-    border-radius: 50%;
-    animation: typing 1.4s infinite ease-in-out both;
+    width: 5px;
+    height: 5px;
+    background-color: var(--bevel-dark);
+    border: 1px solid var(--bevel-shadow);
+    animation: blink 1.2s infinite step-start;
 }
 
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes typing {
-    0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
-    40% { transform: scale(1.1); opacity: 1; }
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.1; }
 }
 
-/* Footer / Input Area */
+/* ── Status Bar ── */
+.win-statusbar {
+    display: flex;
+    align-items: center;
+    background: var(--win-surface);
+    border-top: 1px solid var(--bevel-shadow);
+    padding: 1px 4px;
+    font-size: 10px;
+    gap: 4px;
+    min-height: 20px;
+    margin: 0 4px;
+}
+
+.statusbar-panel {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--bevel-shadow) var(--bevel-light) var(--bevel-light) var(--bevel-shadow);
+    padding: 0 6px;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    font-family: var(--font-ui);
+}
+
+.statusbar-panel.small {
+    flex: 0 0 auto;
+    min-width: 60px;
+}
+
+/* ── Footer / Input Area ── */
 .app-footer {
-    padding: 16px 20px calc(16px + var(--sab, 0px));
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    padding: 4px;
+    background: var(--win-surface);
+    border-top: 1px solid var(--bevel-light);
     position: relative;
     z-index: 10;
+    padding-bottom: calc(4px + var(--sab, 0px));
 }
 
 .input-container {
     display: flex;
     align-items: flex-end;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 6px 6px 6px 18px;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.02), var(--shadow-soft);
-    transition: all 0.3s ease;
-}
-
-.input-container:focus-within {
-    border-color: var(--primary);
-    background: #ffffff;
-    box-shadow: 0 0 0 3px var(--primary-glow);
+    gap: 4px;
 }
 
 textarea {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-main);
+    background: var(--win-white);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+    color: var(--win-black);
     font-family: var(--font-ui);
-    font-size: 16px;
+    font-size: 11px;
     line-height: 1.4;
     resize: none;
-    padding: 10px 0;
-    max-height: 120px;
-    min-height: 24px;
-}
-
-textarea:focus {
+    padding: 4px 6px;
+    max-height: 80px;
+    min-height: 26px;
     outline: none;
 }
 
 textarea::placeholder {
-    color: var(--text-muted);
-    font-weight: 400;
+    color: var(--bevel-shadow);
 }
 
+/* Send button — classic Win2K button */
 .send-btn {
-    box-shadow: none;
-    border: none;
-    background: var(--text-main);
-    color: white;
-    width: 40px;
-    height: 40px;
-    margin-left: 10px;
+    background: var(--win-surface) !important;
+    border-style: solid !important;
+    border-width: 2px !important;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light) !important;
+    color: var(--win-black) !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 60px;
+    padding: 4px 12px !important;
+    font-family: var(--font-ui) !important;
+    font-size: 11px !important;
+    font-weight: bold;
+    border-radius: 0 !important;
+    align-self: flex-end;
+    margin-bottom: 0 !important;
 }
 
-.send-btn:hover, .send-btn:active {
-    background: var(--primary);
-    color: white;
-    transform: scale(1.05);
+.send-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark) !important;
+    transform: none !important;
 }
 
-/* Settings Modal */
+.send-btn svg {
+    display: none; /* Replace icon with text label below */
+}
+
+.send-btn::after {
+    content: "Send";
+}
+
+/* ── Settings Modal (Win2K Dialog Box) ── */
 .modal-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
-    align-items: flex-end; 
+    align-items: center;
     z-index: 100;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.1s linear;
 }
 
 .modal-overlay.active {
@@ -389,173 +526,247 @@ textarea::placeholder {
 }
 
 .modal-content {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    width: 100%;
-    max-width: 500px;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    padding: 28px 24px calc(24px + var(--sab, 0px));
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    width: 360px;
+    max-width: 95%;
+    padding: 0;
+    transform: none;
+    transition: none;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
 }
 
-@media (min-width: 600px) {
-    .modal-overlay {
-        align-items: center;
-    }
-    .modal-content {
-        border-radius: var(--radius-xl);
-        transform: translateY(20px) scale(0.95);
-        padding-bottom: 28px;
-    }
-    .modal-overlay.active .modal-content {
-        transform: translateY(0) scale(1);
-    }
-}
-
-.modal-overlay.active .modal-content {
-    transform: translateY(0);
-}
-
+/* Dialog title bar */
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    background: linear-gradient(to right, var(--titlebar-from), var(--titlebar-to));
+    padding: 3px 4px 3px 8px;
+    min-height: 22px;
 }
 
 .modal-header h2 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    font-family: var(--font-ui);
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+}
+
+.modal-body {
+    padding: 12px;
+}
+
+/* Dialog close button (the ✕ in title bar) */
+#close-settings-btn {
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    width: 16px !important;
+    height: 14px !important;
+    font-size: 9px;
+    color: var(--win-black);
+}
+
+#close-settings-btn svg {
+    width: 8px;
+    height: 8px;
 }
 
 .setting-group {
-    margin-bottom: 24px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .setting-group label {
     display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--text-main);
+    font-weight: bold;
+    font-size: 11px;
+    font-family: var(--font-ui);
+    color: var(--win-black);
 }
 
 .setting-desc {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    line-height: 1.4;
+    font-size: 10px;
+    color: var(--bevel-dark);
+    line-height: 1.3;
+    font-family: var(--font-ui);
 }
 
+/* Inset field group */
 .input-with-icon {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: 0 14px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-    transition: all 0.2s ease;
-}
-
-.input-with-icon:focus-within {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-glow);
-    background: #ffffff;
+    background: var(--win-white);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+    padding: 0 6px;
+    gap: 4px;
 }
 
 .input-with-icon i {
-    color: var(--text-muted);
-    width: 18px;
-    height: 18px;
+    color: var(--bevel-dark);
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.input-with-icon i svg {
+    width: 12px;
+    height: 12px;
 }
 
 .input-with-icon input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--text-main);
-    padding: 16px 14px;
-    font-size: 16px;
+    color: var(--win-black);
+    padding: 5px 4px;
+    font-size: 11px;
     font-family: var(--font-ui);
+    outline: none;
 }
 
-.input-with-icon input:focus {
-    outline: none;
+.input-with-icon input::placeholder {
+    color: var(--bevel-shadow);
 }
 
 .custom-select {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-main);
-    padding: 16px 14px;
-    font-size: 16px;
+    background: var(--win-white);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+    color: var(--win-black);
+    padding: 4px 6px;
+    font-size: 11px;
     font-family: var(--font-ui);
-    font-weight: 500;
     cursor: pointer;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
+    width: 100%;
+}
+
+.minimal-btn {
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    padding: 2px 8px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--win-black);
+    flex-shrink: 0;
+}
+
+.minimal-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+.primary-btn {
+    background: var(--win-surface);
+    color: var(--win-black);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    padding: 6px 24px;
+    font-family: var(--font-ui);
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 4px;
+    box-shadow: none;
+    border-radius: 0;
+    transition: none;
+}
+
+.primary-btn:hover {
+    background: var(--win-surface);
+    transform: none;
+    box-shadow: none;
+}
+
+.primary-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
 }
 
 .help-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: var(--primary);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    margin-top: 12px;
+    gap: 4px;
+    color: #0000ff;
+    text-decoration: underline;
+    font-size: 10px;
+    font-family: var(--font-ui);
 }
 
-.help-link i {
-    width: 14px;
-    height: 14px;
+.help-link i svg {
+    width: 10px;
+    height: 10px;
 }
 
-/* Install Banner */
+/* ── Dialog separator line ── */
+.win-divider {
+    height: 2px;
+    background: linear-gradient(to right, var(--bevel-dark), transparent);
+    margin: 8px 0;
+    border-top: 1px solid var(--bevel-shadow);
+    border-bottom: 1px solid var(--bevel-light);
+}
+
+/* ── Install Banner (Windows XP-style notification bubble) ── */
 .install-banner {
     position: absolute;
-    top: calc(16px + var(--sat, 0px));
-    left: 16px;
-    right: 16px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-    padding: 14px 18px;
+    bottom: calc(80px + var(--sab, 0px));
+    left: 8px;
+    right: 8px;
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    padding: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: var(--shadow-glass);
+    flex-direction: column;
     z-index: 50;
-    transform: translateY(-150%);
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(150%);
+    transition: transform 0.15s linear;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
 }
 
 .install-banner.show {
     transform: translateY(0);
 }
 
+.install-banner-title {
+    background: linear-gradient(to right, var(--titlebar-from), var(--titlebar-to));
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    font-family: var(--font-ui);
+}
+
 .install-info {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    padding: 8px 10px;
 }
 
 .install-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.1);
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
 }
 
 .install-info div {
@@ -564,74 +775,83 @@ textarea::placeholder {
 }
 
 .install-info strong {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 2px;
+    font-size: 11px;
+    font-weight: bold;
+    font-family: var(--font-ui);
 }
 
 .install-info span {
-    font-size: 13px;
-    color: var(--text-muted);
+    font-size: 10px;
+    color: var(--bevel-dark);
+    font-family: var(--font-ui);
 }
 
-/* Desktop Responsiveness - Full Screen ChatGPT Style */
+.install-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 4px 8px 8px;
+}
+
+.small-btn {
+    background: var(--win-surface);
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+    padding: 3px 14px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--win-black);
+}
+
+.small-btn:active {
+    border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+}
+
+/* Fake taskbar at bottom on desktop */
+@media (min-width: 641px) {
+    body {
+        align-items: center;
+        padding: 20px 0 40px; /* Room for "taskbar" */
+        background-image:
+            repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.04) 2px,
+                rgba(0,0,0,0.04) 4px
+            );
+    }
+
+    .app-container {
+        height: calc(100vh - 60px);
+        max-height: 820px;
+    }
+}
+
+/* ── Full-screen desktop ── */
 @media (min-width: 768px) {
     body {
-        align-items: stretch;
-        justify-content: stretch;
-        padding: 0;
+        align-items: center;
+        justify-content: center;
     }
-    
+
     .app-container {
-        height: 100vh;
-        max-height: none;
-        width: 100vw !important;
-        max-width: 100vw !important;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-        /* The body gradient shows entirely; no container background needed */
-        background: transparent;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        margin: 0;
-    }
-    
-    .app-header {
-        border-radius: 0;
-        padding: 24px 60px; 
-        background: rgba(255, 255, 255, 0.4);
-        border-bottom: 1px solid var(--glass-border);
-    }
-    
-    .app-footer {
-        border-radius: 0;
-        padding: 30px 60px;
-        background: rgba(255, 255, 255, 0.4);
-        border-top: 1px solid var(--glass-border);
+        width: 680px;
+        max-width: 680px;
     }
 
     .chat-scroll-area {
-        padding: 40px 10%; /* Very breathable, wide chat */
+        padding: 12px;
     }
 
     .message {
-        max-width: 85%;
-    }
-    
-    .osho-message .message-content {
-        font-size: 21px;
-        line-height: 1.6;
+        max-width: 80%;
     }
 
-    .modal-overlay {
-        background: rgba(0, 0, 0, 0.1);
-    }
-    
-    .install-banner {
-        top: 24px;
-        left: auto;
-        right: 40px;
-        width: 400px;
+    .osho-message .message-content {
+        font-size: 13px;
+        line-height: 1.5;
     }
 }
