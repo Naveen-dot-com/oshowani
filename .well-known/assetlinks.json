@@ -1,8 +1,11 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.naveen_dot_com.twa",
-        "sha256_cert_fingerprints": ["F6:B9:64:83:1B:B9:3B:59:62:43:BA:08:49:E7:3B:24:A8:87:5D:B9:A8:AA:29:21:AA:51:34:34:28:63:4A:03"]
-      }
-    }]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.naveen_dot_com.twa",
+      "sha256_cert_fingerprints":
+        ["C2:EA:EE:07:19:D6:D5:C3:D2:BB:1E:B4:5D:FD:16:BF:A5:8A:30:C0:74:1C:AB:F1:87:0C:82:2C:43:4B:00:9C"]
+    }
+  }
+]
