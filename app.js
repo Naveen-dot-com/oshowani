@@ -200,18 +200,29 @@ function closeHistorySidebar() {
 
 function init() {
     registerServiceWorker();
+    injectThemeCSS();
+    initThemeToggle();
     setupEventListeners();
+    setupIOSKeyboardFix();
+    initOshoAboutModal();
+
     elements.messageInput.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
         if (this.value.trim() === '') this.style.height = 'auto';
     });
+
     const chats = getAllChats();
     chats.length > 0 ? loadChat(chats[0].id) : startNewChat();
+
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
         elements.installBanner.style.display = 'none';
     }
-    initParticles();
+
+    initDandelions();
+
+    // Ask for notification permission after 4 s — not immediately
+    setTimeout(promptNotificationPermission, 4000);
 }
 
 // ===================== Event Listeners =====================
@@ -227,6 +238,13 @@ function setupEventListeners() {
     elements.settingsModal.addEventListener('click', (e) => {
         if (e.target === elements.settingsModal) hideSettingsModal();
     });
+    elements.languageSelect.addEventListener('change', () => {
+        languagePref = elements.languageSelect.value;
+        localStorage.setItem('oshowani_language', languagePref);
+        const prev = elements.statusText.textContent;
+        elements.statusText.textContent = 'Language: ' + languagePref + ' ✓';
+        setTimeout(() => { elements.statusText.textContent = prev; }, 2000);
+    });
     elements.historyBtn.addEventListener('click', openHistorySidebar);
     elements.closeHistoryBtn.addEventListener('click', closeHistorySidebar);
     elements.historyOverlay.addEventListener('click', closeHistorySidebar);
@@ -238,11 +256,7 @@ function setupEventListeners() {
     });
     elements.installBtn.addEventListener('click', async () => {
         elements.installBanner.classList.remove('show');
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
-            deferredPrompt = null;
-        }
+        if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
     });
     elements.closeInstallBtn.addEventListener('click', () => elements.installBanner.classList.remove('show'));
 }
@@ -250,6 +264,7 @@ function setupEventListeners() {
 // ===================== Settings =====================
 
 function showSettingsModal() {
+    languagePref = localStorage.getItem('oshowani_language') || 'Auto';
     elements.languageSelect.value = languagePref;
     elements.settingsModal.classList.add('active');
 }
@@ -262,18 +277,22 @@ function saveSettings() {
     languagePref = elements.languageSelect.value;
     localStorage.setItem('oshowani_language', languagePref);
     hideSettingsModal();
+    const prev = elements.statusText.textContent;
+    elements.statusText.textContent = 'Language: ' + languagePref + ' ✓';
+    setTimeout(() => { elements.statusText.textContent = prev; }, 2000);
 }
 
 // ===================== Chat UI =====================
 
-function addMessageToDOM(text, isUser = false) {
+function addMessageToDOM(text, isUser) {
+    if (isUser === undefined) isUser = false;
     const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${isUser ? 'user-message' : 'osho-message'}`;
+    msgDiv.className = 'message ' + (isUser ? 'user-message' : 'osho-message');
     let formatted = text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-    const paragraphs = formatted.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-    msgDiv.innerHTML = `<div class="message-content">${paragraphs || `<p>${formatted}</p>`}</div>`;
+    const paragraphs = formatted.split(/\n\n+/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+    msgDiv.innerHTML = '<div class="message-content">' + (paragraphs || '<p>' + formatted + '</p>') + '</div>';
     elements.chatScrollArea.appendChild(msgDiv);
     scrollToBottom();
     return msgDiv;
@@ -283,7 +302,7 @@ function showTypingIndicator() {
     const d = document.createElement('div');
     d.className = 'message osho-message';
     d.id = 'typing-indicator';
-    d.innerHTML = `<div class="message-content"><div class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>`;
+    d.innerHTML = '<div class="message-content"><div class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
     elements.chatScrollArea.appendChild(d);
     scrollToBottom();
 }
@@ -302,75 +321,49 @@ function scrollToBottom() {
 async function handleSend() {
     const text = elements.messageInput.value.trim();
     if (!text || isGenerating) return;
-
-    if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-        alert('Please set your Gemini API key in app.js (line 9).');
-        return;
-    }
-
     isGenerating = true;
     elements.sendBtn.disabled = true;
     elements.messageInput.value = '';
     elements.messageInput.style.height = 'auto';
     elements.statusText.textContent = 'Reflecting...';
-
     addMessageToDOM(text, true);
-    conversationHistory.push({ role: "user", parts: [{ text }] });
+    const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
+    const messageText = currentLang !== 'Auto'
+        ? '[RESPOND ONLY IN ' + currentLang.toUpperCase() + ' — THIS IS MANDATORY]\n\n' + text
+        : text;
+    conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
     updateChatHistory(activeChatId, conversationHistory);
     showTypingIndicator();
-
     try {
-        const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', languagePref);
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPromptFilled }] },
-                    contents: conversationHistory,
-                    generationConfig: { temperature: 1.0, topP: 0.95, maxOutputTokens: 1024 }
-                })
-            }
-        );
+        const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', currentLang);
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemPromptFilled }] },
+                contents: conversationHistory,
+                generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 800 }
+            })
+        });
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err?.error?.message || `API Error ${res.status}`);
+            throw new Error(err && err.error && err.error.message ? err.error.message : 'API Error ' + res.status);
         }
         const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "...silence speaks louder than words, beloved.";
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '...silence speaks louder than words.';
         removeTypingIndicator();
         addMessageToDOM(reply, false);
         conversationHistory.push({ role: "model", parts: [{ text: reply }] });
         updateChatHistory(activeChatId, conversationHistory);
     } catch (err) {
         removeTypingIndicator();
-        addMessageToDOM(`*Beloved... something has interrupted the discourse.* ${err.message}`, false);
+        addMessageToDOM('Something has interrupted the discourse. ' + err.message, false);
     } finally {
         isGenerating = false;
         elements.sendBtn.disabled = false;
         elements.statusText.textContent = 'Online';
         renderHistoryList();
     }
-}
-
-// ===================== Particles =====================
-
-function initParticles() {
-    if (typeof tsParticles === 'undefined') return;
-    tsParticles.load('tsparticles', {
-        particles: {
-            number: { value: 25, density: { enable: true, value_area: 800 } },
-            color: { value: ['#c26c1d', '#e8b88a', '#f0d4b0'] },
-            shape: { type: 'circle' },
-            opacity: { value: 0.15, random: true, anim: { enable: true, speed: 0.5, opacity_min: 0.05, sync: false } },
-            size: { value: 3, random: true },
-            move: { enable: true, speed: 0.4, direction: 'none', random: true, out_mode: 'out' },
-            line_linked: { enable: false }
-        },
-        interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
-        retina_detect: true
-    });
 }
 
 // ===================== Service Worker =====================
@@ -381,9 +374,136 @@ function registerServiceWorker() {
     }
 }
 
+// ===================== Osho About Modal =====================
+
+function initOshoAboutModal() {
+    const overlay  = document.getElementById('about-modal');
+    const openBtn  = document.getElementById('osho-about-btn');
+    const closeBtn = document.getElementById('close-about-btn');
+    const ctaBtn   = document.getElementById('about-cta-btn');
+
+    const openAbout  = () => { overlay.classList.add('active'); feather.replace(); };
+    const closeAbout = () => overlay.classList.remove('active');
+
+    openBtn.addEventListener('click', openAbout);
+    closeBtn.addEventListener('click', closeAbout);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAbout(); });
+
+    ctaBtn.addEventListener('click', () => {
+        closeAbout();
+        setTimeout(() => {
+            const input = document.getElementById('message-input');
+            if (input) input.focus();
+        }, 380);
+    });
+}
+
+// ===================== Notifications =====================
+
+const NOTIFICATION_PROMPT = `You are writing a short mobile push notification for Oshowani — a spiritual app where users converse with the wisdom of Osho (Bhagwan Shree Rajneesh).
+
+Write ONE single notification message. Strict rules:
+- Maximum 90 characters
+- Topic: one of [meditation, mindfulness, inner peace, awareness, silence, calmness, being present, love, self-awareness, gratitude]
+- Osho's tone: poetic, rebellious, playful or serene — never preachy
+- Vary the style every time
+- Sometimes (not always) end with "→ Ask Osho" to invite the user into the app
+
+Return ONLY the notification text. No quotes. No explanation.`;
+
+async function generateNotificationMessage() {
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: NOTIFICATION_PROMPT }] }],
+                generationConfig: { temperature: 1.35, topP: 0.97, maxOutputTokens: 60 }
+            })
+        });
+        if (!res.ok) throw new Error('api error');
+        const data = await res.json();
+        const msg = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (msg) return msg;
+    } catch {}
+    // Offline / error fallback pool
+    const pool = [
+        'The mind chatters. You are the one watching it. → Ask Osho',
+        'Breathe. Right now, that breath is your entire universe.',
+        'Stop running. The peace you seek is where you already are.',
+        'Awareness is the only meditation that truly matters. → Ask Osho',
+        'You are not your thoughts. You are the sky, not the clouds.',
+        'The present moment never asks anything of you. Just arrive.',
+        'Silence is not empty. It is full of answers. → Ask Osho',
+        'Joy is your nature. Suffering is just resistance.',
+        'To be at ease in chaos — that is the art of living.',
+        'Love needs no reason. That\'s what makes it love.',
+    ];
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+async function fireOshoNotification() {
+    if (Notification.permission !== 'granted') return;
+    const message = await generateNotificationMessage();
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification('✨ Oshowani', {
+            body: message,
+            icon: 'icons/icon-192.png',
+            badge: 'icons/icon-192.png',
+            tag: 'osho-hourly',
+            renotify: true,
+        });
+    } catch {
+        // Direct fallback for browsers where SW showNotification isn't available
+        try { new Notification('✨ Oshowani', { body: message, icon: 'icons/icon-192.png' }); } catch {}
+    }
+}
+
+async function startHourlyNotifications() {
+    // First thought after 8 minutes, then exactly every hour
+    setTimeout(fireOshoNotification, 8 * 60 * 1000);
+    setInterval(fireOshoNotification, 60 * 60 * 1000);
+
+    // Periodic Background Sync for when app is closed (Android Chrome / TWA)
+    if ('periodicSync' in ServiceWorkerRegistration.prototype) {
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const tags = await reg.periodicSync.getTags();
+            if (!tags.includes('osho-hourly')) {
+                await reg.periodicSync.register('osho-hourly', { minInterval: 60 * 60 * 1000 });
+            }
+        } catch (e) { /* not available on all browsers */ }
+    }
+}
+
+async function promptNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') { startHourlyNotifications(); return; }
+    if (Notification.permission === 'denied') return;
+    if (localStorage.getItem('oshowani_notif_dismissed') === '1') return;
+
+    const banner     = document.getElementById('notif-banner');
+    const allowBtn   = document.getElementById('notif-allow-btn');
+    const dismissBtn = document.getElementById('notif-dismiss-btn');
+
+    banner.classList.add('show');
+
+    allowBtn.addEventListener('click', async () => {
+        banner.classList.remove('show');
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') startHourlyNotifications();
+    }, { once: true });
+
+    dismissBtn.addEventListener('click', () => {
+        banner.classList.remove('show');
+        localStorage.setItem('oshowani_notif_dismissed', '1');
+    }, { once: true });
+}
+
 // ===================== Boot =====================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
     feather.replace();
     init();
 });
