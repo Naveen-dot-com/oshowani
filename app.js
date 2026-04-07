@@ -337,7 +337,6 @@ class DandelionSeed {
         const seedR = 2.2 * s;
         const n = this.numFilaments;
 
-        // Stalk
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(0, stemLen);
@@ -345,13 +344,11 @@ class DandelionSeed {
         ctx.lineWidth = Math.max(0.6, 1.1 * s);
         ctx.stroke();
 
-        // Seed body
         ctx.beginPath();
         ctx.ellipse(0, stemLen, seedR * 0.7, seedR * 1.4, 0, 0, Math.PI * 2);
         ctx.fillStyle = primaryColor;
         ctx.fill();
 
-        // Filaments
         for (let i = 0; i < n; i++) {
             const spreadAngle = (i / n) * Math.PI * 2;
             const tiltX = Math.sin(spreadAngle) * filLen;
@@ -368,13 +365,11 @@ class DandelionSeed {
             ctx.fill();
         }
 
-        // Central hub
         ctx.beginPath();
         ctx.arc(0, 0, Math.max(1.2, 2.2 * s), 0, Math.PI * 2);
         ctx.fillStyle = primaryColor;
         ctx.fill();
 
-        // Hub glow ring
         ctx.beginPath();
         ctx.arc(0, 0, Math.max(2.0, 3.5 * s), 0, Math.PI * 2);
         ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(60,45,30,0.18)';
@@ -405,7 +400,6 @@ function initDandelions() {
     animateDandelions();
 }
 
-// ← UPDATED: devicePixelRatio-aware resize fixes seed SIZE in TWA/APK
 function resizeDandelionCanvas() {
     if (!dandelionCanvas) return;
     const dpr = window.devicePixelRatio || 1;
@@ -443,6 +437,9 @@ function init() {
 
     const chats = getAllChats();
     chats.length > 0 ? loadChat(chats[0].id) : startNewChat();
+
+    // ✅ SPLASH — signals app is ready; splash fades out after 3s minimum
+    window.hideSplash && window.hideSplash();
 
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
         elements.installBanner.style.display = 'none';
