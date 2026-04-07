@@ -79,7 +79,8 @@
   }
 
   var bgParticles = makeSpherePoints(240, 0.05).map(function (p) {
-    p.size = p.w < 0.72 ? 0.65 + Math.random() * 0.8 : 1.4 + Math.random() * 1.6;
+    //p.size = p.w < 0.72 ? 0.65 + Math.random() * 0.8 : 1.4 + Math.random() * 1.6;
+     p.size = p.w < 0.72 ? 0.38 + Math.random() * 0.48 : 0.88 + Math.random() * 0.95;
     p.warm = Math.random() < 0.24;
     return p;
   });
@@ -198,7 +199,8 @@
     var ry = frame * 0.00062;
     var rx = 0.24 + 0.05 * Math.sin(frame * 0.00031);
     var fov = 2.5;
-    var base = Math.max(0.65, Math.min(VW, VH) * 0.0034);
+    //var base = Math.max(0.65, Math.min(VW, VH) * 0.0034);
+     var base = Math.max(0.65, Math.min(VW, VH) * 0.0034);
 
     for (var i = 0; i < bgParticles.length; i++) {
       var p = bgParticles[i];
