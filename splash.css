@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════════════════════════
+   OSHOWANI — SPLASH SCREEN
+   File: splash.css  |  Drop alongside index.html
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Overlay ────────────────────────────────────────────── */
+#splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #07090f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent layout shift during transition */
+  pointer-events: all;
+  /* Safe area support (iOS notch / Android cutout) */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Fade-out state — added by JS */
+#splash-screen.splash-fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Title ──────────────────────────────────────────────── */
+.splash-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(50px, 13.5vw, 76px);
+  color: #ffffff;
+  letter-spacing: 0.07em;
+  text-align: center;
+  line-height: 1;
+  margin: 0;
+  margin-top: clamp(48px, 12vh, 80px);
+  padding: 0 24px;
+  /* Start invisible, slide in from above */
+  opacity: 0;
+  transform: translateY(-16px);
+  animation: splashTitleIn 0.80s cubic-bezier(0.16, 1, 0.3, 1) 0.30s forwards;
+}
+
+/* ── Tagline ─────────────────────────────────────────────── */
+.splash-tagline {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(14px, 3.8vw, 18px);
+  color: rgba(255, 255, 255, 0.76);
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin: 0;
+  margin-top: 11px;
+  padding: 0 24px;
+  opacity: 0;
+  animation: splashFadeIn 0.70s ease 0.90s forwards;
+}
+
+/* ── Canvas (sacred geometry) ───────────────────────────── */
+#splash-canvas {
+  display: block;
+  flex-shrink: 0;
+  margin-top: clamp(10px, 3vh, 26px);
+  opacity: 0;
+  /* Canvas fades in slightly before the draw animation begins */
+  animation: splashFadeIn 0.50s ease 0.65s forwards;
+  /* Crisp rendering on all devices */
+  image-rendering: crisp-edges;
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes splashTitleIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splashFadeIn {
+  to { opacity: 1; }
+}
+
+/* ── Reduced motion: skip all animations, show immediately ─ */
+@media (prefers-reduced-motion: reduce) {
+  .splash-title,
+  .splash-tagline,
+  #splash-canvas {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
