@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
-   OSHOWANI — SPLASH SCREEN
-   File: splash.css  |  Drop alongside index.html
+   OSHOWANI — SPLASH SCREEN v2.0
+   File: splash.css
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Overlay ────────────────────────────────────────────── */
@@ -15,24 +15,34 @@
   justify-content: flex-start;
   overflow: hidden;
   opacity: 1;
-  transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.88s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent layout shift during transition */
   pointer-events: all;
-  /* Safe area support (iOS notch / Android cutout) */
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* Fade-out state — added by JS */
 #splash-screen.splash-fade-out {
   opacity: 0;
   pointer-events: none;
 }
 
+/* ── 3D Sphere canvas (full-screen, behind everything) ──── */
+#splash-sphere {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* ── Title ──────────────────────────────────────────────── */
 .splash-title {
+  position: relative;
+  z-index: 1;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-weight: 300;
   font-size: clamp(50px, 13.5vw, 76px);
@@ -43,7 +53,6 @@
   margin: 0;
   margin-top: clamp(48px, 12vh, 80px);
   padding: 0 24px;
-  /* Start invisible, slide in from above */
   opacity: 0;
   transform: translateY(-16px);
   animation: splashTitleIn 0.80s cubic-bezier(0.16, 1, 0.3, 1) 0.30s forwards;
@@ -51,6 +60,8 @@
 
 /* ── Tagline ─────────────────────────────────────────────── */
 .splash-tagline {
+  position: relative;
+  z-index: 1;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
   font-weight: 400;
@@ -65,31 +76,27 @@
   animation: splashFadeIn 0.70s ease 0.90s forwards;
 }
 
-/* ── Canvas (sacred geometry) ───────────────────────────── */
+/* ── Mandala canvas ──────────────────────────────────────── */
 #splash-canvas {
   display: block;
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
   margin-top: clamp(10px, 3vh, 26px);
   opacity: 0;
-  /* Canvas fades in slightly before the draw animation begins */
   animation: splashFadeIn 0.50s ease 0.65s forwards;
-  /* Crisp rendering on all devices */
   image-rendering: crisp-edges;
 }
 
 /* ── Keyframes ───────────────────────────────────────────── */
 @keyframes splashTitleIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes splashFadeIn {
   to { opacity: 1; }
 }
 
-/* ── Reduced motion: skip all animations, show immediately ─ */
 @media (prefers-reduced-motion: reduce) {
   .splash-title,
   .splash-tagline,
