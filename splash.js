@@ -1,438 +1,489 @@
 /* ═══════════════════════════════════════════════════════════
-   OSHOWANI — SPLASH SCREEN v2.0
+   OSHOWANI — SPLASH SCREEN v3.0
    File: splash.js
 
-   Features:
-   ✦ 220-particle 3D rotating sphere (Fibonacci distribution)
-   ✦ Depth-sorted painter's algorithm + perspective projection
-   ✦ Glow on near particles (shadowBlur — hardware accelerated)
-   ✦ Sacred geometry mandala drawn on top
-   ✦ Re-shows every time the app comes to foreground (≥30s
-     in background) — works for TWA / Play Store APK / PWA
-   ✦ CSS animations restart cleanly on every reshow
-   ✦ pageshow (BFCache) restore handled
+   Core change:
+   The central geometry is no longer drawn as plain line circles.
+   It is built from rotating particle-cloud spheres / electron clouds.
+   These clouds preserve the sacred composition while giving the
+   centre a living volumetric feel.
    ═══════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  /* ── Guard ─────────────────────────────────────────────── */
   var splash = document.getElementById('splash-screen');
   if (!splash) return;
-  var mandalaCanvas = document.getElementById('splash-canvas');
-  if (!mandalaCanvas) return;
-  var mctx = mandalaCanvas.getContext('2d');
-  var DPR  = window.devicePixelRatio || 1;
+  var canvas = document.getElementById('splash-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var DPR = Math.min(window.devicePixelRatio || 1, 2.2);
 
-  /* ── Inject full-screen sphere canvas behind everything ─── */
-  var sphereCanvas = document.createElement('canvas');
-  sphereCanvas.id  = 'splash-sphere';
-  splash.insertBefore(sphereCanvas, splash.firstChild);
-  var sctx = sphereCanvas.getContext('2d');
+  var bgCanvas = document.createElement('canvas');
+  bgCanvas.id = 'splash-sphere';
+  splash.insertBefore(bgCanvas, splash.firstChild);
+  var bg = bgCanvas.getContext('2d');
 
-  /* ══════════════════════════════════════════════════════════
-     SIZING
-  ══════════════════════════════════════════════════════════ */
-  var S, SH, CX, CY, R, P;   /* mandala */
-  var SW, SHGT;               /* sphere  */
+  var W = 0, H = 0, CX = 0, CY = 0, R = 0, P = 0, FULLH = 0, VW = 0, VH = 0;
 
   function setupCanvas() {
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
+    VW = window.innerWidth;
+    VH = window.innerHeight;
 
-    /* Mandala canvas */
-    S  = Math.min(vw * 0.80, 320, vh * 0.50);
-    SH = S * 1.26;
-    mandalaCanvas.width  = Math.round(S  * DPR);
-    mandalaCanvas.height = Math.round(SH * DPR);
-    mandalaCanvas.style.width  = S  + 'px';
-    mandalaCanvas.style.height = SH + 'px';
-    mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    CX = S  / 2;
-    CY = SH * 0.415;
-    R  = S  * 0.405;
-    P  = R  / 3;
+    W = Math.min(VW * 0.82, 332, VH * 0.50);
+    FULLH = W * 1.28;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(FULLH * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = FULLH + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-    /* Sphere canvas — full viewport */
-    SW   = vw;
-    SHGT = vh;
-    sphereCanvas.width  = Math.round(SW   * DPR);
-    sphereCanvas.height = Math.round(SHGT * DPR);
-    sphereCanvas.style.width  = SW   + 'px';
-    sphereCanvas.style.height = SHGT + 'px';
-    sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    bgCanvas.width = Math.round(VW * DPR);
+    bgCanvas.height = Math.round(VH * DPR);
+    bgCanvas.style.width = VW + 'px';
+    bgCanvas.style.height = VH + 'px';
+    bg.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    CX = W / 2;
+    CY = FULLH * 0.41;
+    R = W * 0.405;
+    P = R / 3;
   }
   setupCanvas();
 
-  /* ══════════════════════════════════════════════════════════
-     3D SPHERE PARTICLES
-     220 points distributed via Fibonacci / golden-angle method
-     giving near-uniform coverage of the unit sphere.
-  ══════════════════════════════════════════════════════════ */
-  var N_PARTICLES = 220;
-  var particles   = [];
-  var GOLDEN      = Math.PI * (3.0 - Math.sqrt(5.0)); /* ≈ 2.3999 */
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function easeOut(t) { var u = 1 - t; return 1 - u * u * u; }
+  function phase(t, a, b) { return clamp((t - a) / (b - a), 0, 1); }
 
-  for (var pi = 0; pi < N_PARTICLES; pi++) {
-    var y0  = 1.0 - (pi / (N_PARTICLES - 1)) * 2.0;
-    var r0  = Math.sqrt(Math.max(0, 1.0 - y0 * y0));
-    var th0 = GOLDEN * pi;
-    /* classify: 0=tiny  1=small  2=medium  3=large+glow */
-    var rnd = Math.random();
-    var cls = rnd < 0.38 ? 0 : rnd < 0.68 ? 1 : rnd < 0.88 ? 2 : 3;
+  var GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
-    particles.push({
-      ox: Math.cos(th0) * r0,
-      oy: y0,
-      oz: Math.sin(th0) * r0,
-      cls: cls,
-      ba: cls === 0 ? 0.14 + Math.random() * 0.18 :
-          cls === 1 ? 0.28 + Math.random() * 0.26 :
-          cls === 2 ? 0.48 + Math.random() * 0.30 :
-                      0.68 + Math.random() * 0.28,
-      sm: cls === 0 ? 0.28 + Math.random() * 0.22 :
-          cls === 1 ? 0.55 + Math.random() * 0.38 :
-          cls === 2 ? 0.90 + Math.random() * 0.55 :
-                      1.55 + Math.random() * 0.80,
-      warm: Math.random() < 0.25
-    });
+  function makeSpherePoints(count, jitter) {
+    var arr = [];
+    for (var i = 0; i < count; i++) {
+      var y = 1 - (i / (count - 1)) * 2;
+      var radius = Math.sqrt(Math.max(0, 1 - y * y));
+      var theta = GOLDEN * i;
+      var j = jitter || 0;
+      var jx = 1 + (Math.random() - 0.5) * j;
+      var jy = 1 + (Math.random() - 0.5) * j;
+      var jz = 1 + (Math.random() - 0.5) * j;
+      arr.push({
+        x: Math.cos(theta) * radius * jx,
+        y: y * jy,
+        z: Math.sin(theta) * radius * jz,
+        w: Math.random(),
+        a: 0.55 + Math.random() * 0.45
+      });
+    }
+    return arr;
   }
 
-  /* Rotation state */
-  var rotY      = 0;
-  var rotX      = 0.22;
-  var sFrame    = 0;
-  var ROT_Y_SPD = 0.00062; /* ~22 s / full revolution */
+  var bgParticles = makeSpherePoints(240, 0.05).map(function (p) {
+    p.size = p.w < 0.72 ? 0.65 + Math.random() * 0.8 : 1.4 + Math.random() * 1.6;
+    p.warm = Math.random() < 0.24;
+    return p;
+  });
 
-  /* Reusable projected-point array — avoids GC pressure */
-  var proj = new Array(N_PARTICLES);
-  for (var qi = 0; qi < N_PARTICLES; qi++) proj[qi] = {};
+  function makeCloud(spec) {
+    return {
+      cx: spec.cx,
+      cy: spec.cy,
+      r: spec.r,
+      count: spec.count,
+      rotY: spec.rotY || 0,
+      rotX: spec.rotX || 0,
+      speedY: spec.speedY || 0,
+      wobble: spec.wobble || 0,
+      baseAlpha: spec.baseAlpha || 0.5,
+      warmBias: spec.warmBias || 0.75,
+      points: makeSpherePoints(spec.count, spec.jitter || 0.18)
+    };
+  }
 
-  function drawSphere(globalAlpha) {
-    sctx.clearRect(0, 0, SW, SHGT);
-    if (globalAlpha < 0.008) return;
+  var clouds = [];
 
-    var scx      = SW * 0.5;
-    var scy      = SHGT * 0.5;
-    var sphereR  = Math.min(SW, SHGT) * 0.52;
-    var FOV      = 2.6;
-    var baseSize = Math.max(0.75, Math.min(SW, SHGT) * 0.0036);
+  function buildClouds() {
+    clouds = [];
 
-    sFrame++;
-    rotY += ROT_Y_SPD;
-    rotX  = 0.22 + 0.06 * Math.sin(sFrame * 0.00038);
+    clouds.push(makeCloud({ cx: 0, cy: 0, r: P * 1.16, count: 340, speedY: 0.0010, wobble: 0.16, baseAlpha: 0.58, warmBias: 0.90, jitter: 0.16 }));
 
-    var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-    var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-
-    /* ── Project all particles ───────────────────────────── */
-    for (var i = 0; i < N_PARTICLES; i++) {
-      var p  = particles[i];
-
-      /* Y-axis rotation */
-      var xr  = p.ox * cosY + p.oz * sinY;
-      var zr  = -p.ox * sinY + p.oz * cosY;
-
-      /* X-axis rotation */
-      var yr2 = p.oy * cosX - zr * sinX;
-      var zr2 = p.oy * sinX + zr * cosX;
-
-      /* Perspective projection */
-      var depth = FOV + zr2;
-      var psc   = FOV / depth;
-      var d01   = (zr2 + 1.0) * 0.5; /* 0=far, 1=near */
-
-      var q = proj[i];
-      q.sx   = scx + xr  * sphereR * psc;
-      q.sy   = scy + yr2 * sphereR * psc;
-      q.sz   = baseSize * p.sm * (0.22 + 0.78 * psc);
-      q.al   = p.ba * (0.10 + 0.90 * d01) * globalAlpha;
-      q.zz   = zr2;
-      q.d01  = d01;
-      q.cls  = p.cls;
-      q.warm = p.warm;
+    for (var i = 0; i < 6; i++) {
+      var a = (i / 6) * Math.PI * 2;
+      clouds.push(makeCloud({
+        cx: Math.cos(a) * P,
+        cy: Math.sin(a) * P,
+        r: P * 0.98,
+        count: 170,
+        rotY: a,
+        rotX: 0.42,
+        speedY: 0.0014 + i * 0.00008,
+        wobble: 0.12,
+        baseAlpha: 0.44,
+        warmBias: 0.80,
+        jitter: 0.22
+      }));
     }
 
-    /* ── Sort back-to-front (painter's algorithm) ────────── */
-    proj.sort(function (a, b) { return a.zz - b.zz; });
+    for (var j = 0; j < 6; j++) {
+      var b = (j / 6) * Math.PI * 2 + Math.PI / 6;
+      clouds.push(makeCloud({
+        cx: Math.cos(b) * P * 0.50,
+        cy: Math.sin(b) * P * 0.50,
+        r: P * 0.46,
+        count: 80,
+        rotY: b,
+        rotX: 0.8,
+        speedY: 0.0019 + j * 0.00006,
+        wobble: 0.18,
+        baseAlpha: 0.34,
+        warmBias: 0.68,
+        jitter: 0.30
+      }));
+    }
+  }
+  buildClouds();
 
-    /* ── Draw ────────────────────────────────────────────── */
-    for (var j = 0; j < N_PARTICLES; j++) {
-      var q2 = proj[j];
-      if (q2.al < 0.012 || q2.sz < 0.18) continue;
+  function drawDot(x, y, size, alpha, warm, blurMul) {
+    if (alpha <= 0.01 || size <= 0.12) return;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    if (blurMul > 0) {
+      ctx.shadowBlur = size * blurMul;
+      ctx.shadowColor = warm
+        ? 'rgba(234,171,70,' + Math.min(alpha, 0.95) + ')'
+        : 'rgba(255,244,220,' + Math.min(alpha * 0.8, 0.8) + ')';
+    } else {
+      ctx.shadowBlur = 0;
+    }
+    ctx.fillStyle = warm
+      ? 'rgba(234,183,94,' + alpha + ')'
+      : 'rgba(255,246,230,' + alpha + ')';
+    ctx.fill();
+  }
 
-      sctx.save();
+  function drawBgDot(x, y, size, alpha, warm, blur) {
+    if (alpha <= 0.01 || size <= 0.08) return;
+    bg.beginPath();
+    bg.arc(x, y, size, 0, Math.PI * 2);
+    bg.shadowBlur = blur;
+    bg.shadowColor = warm
+      ? 'rgba(212,150,54,' + Math.min(alpha * 0.9, 0.85) + ')'
+      : 'rgba(255,255,255,' + Math.min(alpha * 0.6, 0.5) + ')';
+    bg.fillStyle = warm
+      ? 'rgba(255,210,120,' + alpha + ')'
+      : 'rgba(255,255,255,' + alpha + ')';
+    bg.fill();
+  }
 
-      /* Glow — large particles in the near hemisphere */
-      if (q2.cls === 3 && q2.d01 > 0.52) {
-        sctx.shadowBlur  = Math.max(3, q2.sz * 6);
-        sctx.shadowColor = q2.warm
-          ? 'rgba(218,155,50,'  + (q2.al * 0.95) + ')'
-          : 'rgba(140,180,255,' + (q2.al * 0.90) + ')';
-      } else if (q2.cls === 2 && q2.d01 > 0.68) {
-        sctx.shadowBlur  = Math.max(2, q2.sz * 3);
-        sctx.shadowColor = q2.warm
-          ? 'rgba(210,145,40,'  + (q2.al * 0.65) + ')'
-          : 'rgba(180,210,255,' + (q2.al * 0.55) + ')';
+  function rotatePoint(px, py, pz, rx, ry) {
+    var cosY = Math.cos(ry), sinY = Math.sin(ry);
+    var x1 = px * cosY + pz * sinY;
+    var z1 = -px * sinY + pz * cosY;
+
+    var cosX = Math.cos(rx), sinX = Math.sin(rx);
+    var y2 = py * cosX - z1 * sinX;
+    var z2 = py * sinX + z1 * cosX;
+
+    return { x: x1, y: y2, z: z2 };
+  }
+
+  function drawBackgroundSphere(progress, frame) {
+    bg.clearRect(0, 0, VW, VH);
+    if (progress <= 0.003) return;
+
+    var list = [];
+    var cx = VW * 0.5;
+    var cy = VH * 0.53;
+    var sr = Math.min(VW, VH) * 0.53;
+    var ry = frame * 0.00062;
+    var rx = 0.24 + 0.05 * Math.sin(frame * 0.00031);
+    var fov = 2.5;
+    var base = Math.max(0.65, Math.min(VW, VH) * 0.0034);
+
+    for (var i = 0; i < bgParticles.length; i++) {
+      var p = bgParticles[i];
+      var r = rotatePoint(p.x, p.y, p.z, rx, ry + p.w * 0.35);
+      var scale = fov / (fov + r.z);
+      var depth = (r.z + 1) * 0.5;
+      list.push({
+        x: cx + r.x * sr * scale,
+        y: cy + r.y * sr * scale,
+        z: r.z,
+        s: base * p.size * (0.24 + 0.76 * scale),
+        a: (0.08 + depth * 0.92) * p.a * progress,
+        warm: p.warm,
+        blur: p.size > 1.5 && depth > 0.55 ? base * 5.5 * scale : 0
+      });
+    }
+
+    list.sort(function (a, b) { return a.z - b.z; });
+
+    for (var j = 0; j < list.length; j++) {
+      var d = list[j];
+      drawBgDot(d.x, d.y, d.s, d.a, d.warm, d.blur);
+    }
+
+    bg.shadowBlur = 0;
+  }
+
+  function strokeConstellation(points, alpha) {
+    if (alpha <= 0.01) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(205,138,56,' + alpha + ')';
+    ctx.lineWidth = 0.7;
+    for (var i = 1; i < points.length; i++) {
+      if (Math.abs(points[i].z - points[i - 1].z) > 0.5) continue;
+      ctx.beginPath();
+      ctx.moveTo(points[i - 1].x, points[i - 1].y);
+      ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawElectronCloud(cloud, frame, visibility, index) {
+    var items = [];
+    var ry = cloud.rotY + frame * cloud.speedY;
+    var rx = cloud.rotX + Math.sin(frame * 0.0012 + index) * cloud.wobble;
+    var fov = 2.8;
+
+    for (var i = 0; i < cloud.points.length; i++) {
+      var p = cloud.points[i];
+      var rp = rotatePoint(p.x, p.y, p.z, rx, ry);
+      var scale = fov / (fov + rp.z);
+      var depth = (rp.z + 1) * 0.5;
+      items.push({
+        x: CX + cloud.cx + rp.x * cloud.r * scale,
+        y: CY + cloud.cy + rp.y * cloud.r * scale,
+        z: rp.z,
+        s: (0.30 + p.w * 1.05) * (0.36 + 0.74 * scale),
+        a: (cloud.baseAlpha * p.a) * (0.12 + 0.88 * depth) * visibility,
+        warm: p.w < cloud.warmBias,
+        glow: depth > 0.62 && p.w > 0.62 ? 4.8 : 0,
+        depth: depth
+      });
+    }
+
+    items.sort(function (a, b) { return a.z - b.z; });
+
+    var front = [];
+    for (var j = 0; j < items.length; j++) {
+      var dot = items[j];
+      if (dot.depth > 0.60 && dot.a > 0.08) front.push(dot);
+      drawDot(dot.x, dot.y, dot.s, dot.a, dot.warm, dot.glow);
+    }
+
+    strokeConstellation(front.slice(0, 40), visibility * 0.05);
+    ctx.shadowBlur = 0;
+  }
+
+  function drawOuterShells(t, frame) {
+    var p1 = phase(t, 0.00, 0.44);
+    var p2 = phase(t, 0.16, 0.58);
+    var p3 = phase(t, 0.28, 0.70);
+
+    function ringCloud(count, dist, radius, vis, speed, alphaBase) {
+      if (vis <= 0.01) return;
+      for (var i = 0; i < count; i++) {
+        var ang = (i / count) * Math.PI * 2 + frame * speed;
+        var cx = Math.cos(ang) * dist;
+        var cy = Math.sin(ang) * dist;
+        drawElectronCloud({
+          cx: cx,
+          cy: cy,
+          r: radius,
+          rotY: ang,
+          rotX: 0.45,
+          speedY: 0.001,
+          wobble: 0.08,
+          baseAlpha: alphaBase,
+          warmBias: 0.84,
+          points: makeSpherePoints(44, 0.24)
+        }, frame, vis, i + 90);
       }
-
-      sctx.beginPath();
-      sctx.arc(q2.sx, q2.sy, Math.max(0.25, q2.sz), 0, 6.2831853);
-      sctx.fillStyle = q2.warm
-        ? 'rgba(255,210,110,' + q2.al + ')'
-        : 'rgba(255,255,255,' + q2.al + ')';
-      sctx.fill();
-      sctx.restore();
     }
+
+    ringCloud(18, R * 0.875, P * 0.34, easeOut(p1) * 0.55, 0.00022, 0.14);
+    ringCloud(12, R * 0.645, P * 0.26, easeOut(p2) * 0.52, -0.00030, 0.16);
+    ringCloud(1, 0, R * 0.96, easeOut(p3) * 0.18, 0.00016, 0.06);
   }
 
-  /* ══════════════════════════════════════════════════════════
-     SACRED GEOMETRY MANDALA
-  ══════════════════════════════════════════════════════════ */
-  var gold  = function (a) { return 'rgba(196,118,36,' + a + ')'; };
-  var goldB = function (a) { return 'rgba(222,158,60,' + a + ')'; };
+  function drawStem(t) {
+    var p = easeOut(phase(t, 0.08, 0.52));
+    if (p <= 0) return;
 
-  function arcProg(cx, cy, rad, prog, color, lw) {
-    if (prog <= 0) return;
-    var p   = prog > 1 ? 1 : prog;
-    var len = 6.2831853 * rad;
-    mctx.save();
-    mctx.setLineDash([len * p, len]);
-    mctx.lineDashOffset = 0;
-    mctx.beginPath();
-    mctx.arc(cx, cy, rad, -1.5707963, 4.7123889);
-    mctx.strokeStyle = color;
-    mctx.lineWidth   = lw;
-    mctx.stroke();
-    mctx.restore();
+    ctx.save();
+    ctx.lineWidth = 0.58;
+    for (var i = 0; i < 14; i++) {
+      var fr = i / 13;
+      var a = Math.PI * (0.06 + 0.88 * fr);
+      var sx = CX + R * 0.875 * Math.cos(a);
+      var sy = CY + R * 0.875 * Math.sin(a);
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + (CX - sx) * p, sy + (FULLH * 0.98 - sy) * p);
+      ctx.strokeStyle = 'rgba(175,106,36,' + (0.06 + 0.08 * fr) + ')';
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
-  var easeOut = function (t) { var u = 1 - t; return 1 - u * u * u; };
-  var clamp   = function (v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; };
-  var ph      = function (t, s, e) { return clamp((t - s) / (e - s), 0, 1); };
+  function drawCoreGlow(t, frame) {
+    var p = easeOut(phase(t, 0.62, 1.00));
+    if (p <= 0) return;
 
-  function drawMandala(t) {
-    mctx.clearRect(0, 0, S, SH);
+    var pulse = 0.82 + 0.18 * Math.sin(frame * 0.003);
+    var g1 = ctx.createRadialGradient(CX, CY, 0, CX, CY, P * 1.55);
+    g1.addColorStop(0, 'rgba(255,236,180,' + (0.22 * p * pulse) + ')');
+    g1.addColorStop(0.42, 'rgba(227,158,62,' + (0.14 * p * pulse) + ')');
+    g1.addColorStop(1, 'rgba(82,36,0,0)');
+    ctx.beginPath();
+    ctx.arc(CX, CY, P * 1.55, 0, Math.PI * 2);
+    ctx.fillStyle = g1;
+    ctx.fill();
 
-    /* 1. Outer sphere ring — 18 circles */
-    var outPh = ph(t, 0.00, 0.40), outD = R * 0.875;
-    for (var oi = 0; oi < 18; oi++) {
-      var oA = (oi / 18) * 6.2831853;
-      var oP = easeOut(clamp(outPh * 18 - oi * 0.72, 0, 1));
-      arcProg(CX + outD * Math.cos(oA), CY + outD * Math.sin(oA),
-              P * 1.07, oP, gold(0.11 + oP * 0.05), 0.65);
-    }
-
-    /* 2. Converging stem lines */
-    var stPh = easeOut(ph(t, 0.05, 0.46));
-    mctx.save(); mctx.setLineDash([]);
-    for (var li = 0; li < 14; li++) {
-      var fr = li / 13, lA = Math.PI * (0.06 + 0.88 * fr);
-      var sx = CX + R * 0.875 * Math.cos(lA), sy = CY + R * 0.875 * Math.sin(lA);
-      mctx.beginPath(); mctx.moveTo(sx, sy);
-      mctx.lineTo(sx + (CX - sx) * stPh, sy + (SH * 0.975 - sy) * stPh);
-      mctx.strokeStyle = gold(0.055 + fr * 0.072);
-      mctx.lineWidth   = 0.55; mctx.stroke();
-    }
-    mctx.restore();
-
-    /* 3. Main outer bounding circle */
-    arcProg(CX, CY, R * 0.955, easeOut(ph(t, 0.09, 0.50)), gold(0.40), 1.0);
-
-    /* 4. Middle ring — 12 circles */
-    var miPh = ph(t, 0.20, 0.58), miD = R * 0.645;
-    for (var mi = 0; mi < 12; mi++) {
-      var mA = (mi / 12) * 6.2831853;
-      var mP = easeOut(clamp(miPh * 12 - mi * 0.58, 0, 1));
-      arcProg(CX + miD * Math.cos(mA), CY + miD * Math.sin(mA),
-              P, mP, gold(0.24 + mP * 0.07), 0.78);
-    }
-
-    /* 5. Flower of Life — centre + 6 petals */
-    var flPh = ph(t, 0.40, 0.76);
-    arcProg(CX, CY, P * 0.97, easeOut(ph(t, 0.40, 0.66)), gold(0.74), 1.0);
-    for (var fi = 0; fi < 6; fi++) {
-      var fA = (fi / 6) * 6.2831853;
-      var fP = easeOut(clamp(flPh * 6 - fi * 0.68, 0, 1));
-      arcProg(CX + P * Math.cos(fA), CY + P * Math.sin(fA),
-              P * 0.97, fP, gold(0.70), 0.9);
-    }
-
-    /* 6. Inner mini-petals at P/2, offset 30° */
-    var inPh = easeOut(ph(t, 0.56, 0.82));
-    for (var ii = 0; ii < 6; ii++) {
-      var iA = (ii / 6) * 6.2831853 + 0.5235988;
-      var iP = easeOut(clamp(inPh * 6 - ii * 0.52, 0, 1));
-      arcProg(CX + P * 0.50 * Math.cos(iA), CY + P * 0.50 * Math.sin(iA),
-              P * 0.50, iP, goldB(0.50), 0.85);
-    }
-
-    /* 7. Centre filled sphere */
-    var spPh = easeOut(ph(t, 0.60, 0.90));
-    if (spPh > 0) {
-      var gS = mctx.createRadialGradient(CX, CY, 0, CX, CY, P * 1.30);
-      gS.addColorStop(0.00, 'rgba(222,158,60,' + (0.95 * spPh) + ')');
-      gS.addColorStop(0.38, 'rgba(196,118,36,' + (0.74 * spPh) + ')');
-      gS.addColorStop(0.72, 'rgba(152,80,12,'  + (0.44 * spPh) + ')');
-      gS.addColorStop(1.00, 'rgba(70,25,0,0)');
-      mctx.beginPath(); mctx.arc(CX, CY, P * 1.30, 0, 6.2831853);
-      mctx.fillStyle = gS; mctx.fill();
-    }
-
-    /* 8. Centre glow burst */
-    var glPh = easeOut(ph(t, 0.70, 1.00));
-    if (glPh > 0) {
-      var gG = mctx.createRadialGradient(CX, CY, 0, CX, CY, 30);
-      gG.addColorStop(0.00, 'rgba(255,232,155,' + (0.94 * glPh) + ')');
-      gG.addColorStop(0.28, 'rgba(255,200,100,' + (0.62 * glPh) + ')');
-      gG.addColorStop(1.00, 'rgba(220,138,38,0)');
-      mctx.beginPath(); mctx.arc(CX, CY, 30, 0, 6.2831853);
-      mctx.fillStyle = gG; mctx.fill();
-
-      var gD = mctx.createRadialGradient(CX, CY, 0, CX, CY, 4.5);
-      gD.addColorStop(0, 'rgba(255,255,232,' + glPh + ')');
-      gD.addColorStop(1, 'rgba(255,218,110,0)');
-      mctx.beginPath(); mctx.arc(CX, CY, 4.5, 0, 6.2831853);
-      mctx.fillStyle = gD; mctx.fill();
-    }
+    var g2 = ctx.createRadialGradient(CX, CY, 0, CX, CY, 26 + 7 * pulse);
+    g2.addColorStop(0, 'rgba(255,248,225,' + (0.92 * p) + ')');
+    g2.addColorStop(0.20, 'rgba(255,214,126,' + (0.66 * p) + ')');
+    g2.addColorStop(1, 'rgba(223,142,43,0)');
+    ctx.beginPath();
+    ctx.arc(CX, CY, 26 + 7 * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = g2;
+    ctx.fill();
   }
 
-  /* ══════════════════════════════════════════════════════════
-     ANIMATION LOOPS
-  ══════════════════════════════════════════════════════════ */
-  var DRAW_DUR = 2350;
+  function drawMandala(t, frame) {
+    ctx.clearRect(0, 0, W, FULLH);
+    drawOuterShells(t, frame);
+    drawStem(t);
+
+    var centrePhase = easeOut(phase(t, 0.34, 0.88));
+    for (var i = 0; i < clouds.length; i++) {
+      var vis = centrePhase;
+      if (i === 0) vis *= 1.0;
+      else if (i <= 6) vis *= 0.92;
+      else vis *= 0.86;
+      drawElectronCloud(clouds[i], frame, vis, i);
+    }
+
+    drawCoreGlow(t, frame);
+  }
+
+  var DRAW_MS = 2550;
   var MIN_SHOW = 3000;
+  var RESHOW_AFTER = 1000;
 
-  var t0        = null;
-  var pulseT0   = null;
-  var animId    = null;
+  var startTime = 0;
+  var pulseStart = 0;
+  var raf = 0;
   var dismissed = false;
   var isShowing = false;
-  var appCalled = false;
-  var timerDone = false;
-  var minTimer  = null;
-  var fallTimer = null;
+  var appReady = false;
+  var minDone = false;
+  var minTimer = 0;
+  var fallTimer = 0;
+  var frame = 0;
 
-  function tick(ts) {
-    if (!t0) t0 = ts;
-    var t = Math.min((ts - t0) / DRAW_DUR, 1);
-    drawSphere(easeOut(ph(t, 0, 0.35)));
-    drawMandala(t);
+  function animationFrame(ts) {
+    if (!startTime) startTime = ts;
+    frame = ts;
+    var t = Math.min((ts - startTime) / DRAW_MS, 1);
+    drawBackgroundSphere(easeOut(phase(t, 0, 0.35)), ts);
+    drawMandala(t, ts);
     if (t < 1) {
-      animId = requestAnimationFrame(tick);
+      raf = requestAnimationFrame(animationFrame);
     } else {
-      animId = requestAnimationFrame(pulseTick);
+      raf = requestAnimationFrame(pulseFrame);
     }
   }
 
-  function pulseTick(ts) {
+  function pulseFrame(ts) {
     if (dismissed) return;
-    if (!pulseT0) pulseT0 = ts;
-    var el = ts - pulseT0;
-
-    drawSphere(1.0);
-    drawMandala(1);
-
-    /* Breathing glow on centre point */
-    var beat = 0.78 + 0.22 * Math.sin(el * 0.00248);
-    var gr   = 24 + 10 * beat;
-    var gP   = mctx.createRadialGradient(CX, CY, 0, CX, CY, gr);
-    gP.addColorStop(0,    'rgba(255,232,155,' + (0.92 * beat) + ')');
-    gP.addColorStop(0.32, 'rgba(255,200,100,' + (0.52 * beat) + ')');
-    gP.addColorStop(1,    'rgba(220,138,38,0)');
-    mctx.beginPath(); mctx.arc(CX, CY, gr, 0, 6.2831853);
-    mctx.fillStyle = gP; mctx.fill();
-
-    animId = requestAnimationFrame(pulseTick);
+    if (!pulseStart) pulseStart = ts;
+    frame = ts;
+    drawBackgroundSphere(1, ts);
+    drawMandala(1, ts);
+    raf = requestAnimationFrame(pulseFrame);
   }
 
   function startAnimation() {
-    t0 = null; pulseT0 = null;
-    if (animId) cancelAnimationFrame(animId);
-    setTimeout(function () { animId = requestAnimationFrame(tick); }, 80);
+    startTime = 0;
+    pulseStart = 0;
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(animationFrame);
   }
 
   function startTimers() {
-    if (minTimer)  clearTimeout(minTimer);
-    if (fallTimer) clearTimeout(fallTimer);
+    clearTimeout(minTimer);
+    clearTimeout(fallTimer);
+    minDone = false;
     minTimer = setTimeout(function () {
-      timerDone = true;
-      if (appCalled) doHide();
+      minDone = true;
+      if (appReady) hideNow();
     }, MIN_SHOW);
-    fallTimer = setTimeout(function () { doHide(); }, 6000);
+    fallTimer = setTimeout(hideNow, 6500);
   }
 
-  /* ── Initial startup ────────────────────────────────────── */
-  isShowing = true;
-  startAnimation();
-  startTimers();
-
-  /* ── Dismiss ─────────────────────────────────────────────── */
-  function doHide() {
+  function hideNow() {
     if (dismissed) return;
     dismissed = true;
     isShowing = false;
-    if (animId) cancelAnimationFrame(animId);
-    if (minTimer)  clearTimeout(minTimer);
-    if (fallTimer) clearTimeout(fallTimer);
+    cancelAnimationFrame(raf);
+    clearTimeout(minTimer);
+    clearTimeout(fallTimer);
     splash.classList.add('splash-fade-out');
-    setTimeout(function () { splash.style.display = 'none'; }, 900);
+    setTimeout(function () {
+      splash.style.display = 'none';
+    }, 900);
   }
 
-  /* ── Public API ──────────────────────────────────────────── */
   window.hideSplash = function () {
-    appCalled = true;
-    if (timerDone) doHide();
+    appReady = true;
+    if (minDone) hideNow();
   };
 
-  /* ══════════════════════════════════════════════════════════
-     RE-SHOW ON APP FOREGROUND (TWA / APK / PWA)
-     Shows splash every time app resumes after ≥30s background
-  ══════════════════════════════════════════════════════════ */
-  var RESHOW_AFTER   = 30 * 1000;
-  var backgroundedAt = null;
-
-  function resetCSSAnimations() {
-    var els = [
+  function resetCssAnimations() {
+    var list = [
       splash.querySelector('.splash-title'),
       splash.querySelector('.splash-tagline'),
-      mandalaCanvas
+      canvas
     ];
-    els.forEach(function (el) {
+
+    list.forEach(function (el) {
       if (!el) return;
       el.style.animation = 'none';
-      el.style.opacity   = '0';
-      el.style.transform = el.classList && el.classList.contains('splash-title')
-        ? 'translateY(-16px)' : '';
+      el.style.opacity = '0';
+      el.style.transform = el.classList && el.classList.contains('splash-title') ? 'translateY(-16px)' : '';
     });
-    void splash.offsetHeight; /* force reflow */
-    els.forEach(function (el) {
+
+    void splash.offsetHeight;
+
+    list.forEach(function (el) {
       if (!el) return;
-      el.style.animation  = '';
-      el.style.opacity    = '';
-      el.style.transform  = '';
+      el.style.animation = '';
+      el.style.opacity = '';
+      el.style.transform = '';
     });
   }
 
   function reshowSplash() {
     if (isShowing) return;
-    isShowing = true;
     dismissed = false;
-    appCalled = true;
-    timerDone = false;
-
+    isShowing = true;
+    appReady = true;
     splash.style.display = '';
-
     requestAnimationFrame(function () {
       splash.classList.remove('splash-fade-out');
-      resetCSSAnimations();
       setupCanvas();
+      buildClouds();
+      resetCssAnimations();
       startAnimation();
       startTimers();
     });
   }
 
-  /* visibilitychange — fires on Home button / app switcher */
+  var backgroundedAt = null;
+
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') {
       backgroundedAt = Date.now();
@@ -445,9 +496,16 @@
     }
   });
 
-  /* pageshow — handles BFCache restores */
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) reshowSplash();
   });
 
+  window.addEventListener('resize', function () {
+    setupCanvas();
+    buildClouds();
+  }, { passive: true });
+
+  isShowing = true;
+  startAnimation();
+  startTimers();
 }());
