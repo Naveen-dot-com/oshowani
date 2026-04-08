@@ -751,3 +751,58 @@ body[data-theme="dark"] .install-info span { color: rgba(255,255,255,0.45); }
 /* ===================== SCROLLBAR ===================== */
 * { scrollbar-width: none; }
 *::-webkit-scrollbar { display: none; }
+
+
+/* ── Privacy Modal — Full Policy Styles ── */
+.privacy-modal-body table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0 18px; font-size: 13px;
+}
+.privacy-modal-body th {
+    background: rgba(194,108,29,0.12);
+    color: #1e1408; font-weight: 700;
+    text-align: left; padding: 9px 12px;
+    border: 1px solid rgba(194,108,29,0.20);
+}
+.privacy-modal-body td {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.07);
+    color: #3a2e22; vertical-align: top;
+    line-height: 1.55;
+}
+.privacy-modal-body tr:nth-child(even) td {
+    background: rgba(194,108,29,0.03);
+}
+.privacy-tag {
+    display: inline-block;
+    background: rgba(194,108,29,0.12);
+    color: #c26c1d; font-size: 11px;
+    font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; letter-spacing: 0.2px;
+    font-family: monospace;
+}
+.privacy-modal-body ul {
+    margin: 6px 0 12px 18px;
+}
+.privacy-modal-body ul li {
+    font-size: 14px; line-height: 1.70;
+    color: #3a2e22; margin-bottom: 6px;
+}
+body[data-theme="dark"] .privacy-modal-body th {
+    background: rgba(194,108,29,0.18);
+    color: rgba(255,245,225,0.92);
+    border-color: rgba(194,108,29,0.30);
+}
+body[data-theme="dark"] .privacy-modal-body td {
+    border-color: rgba(255,255,255,0.07);
+    color: rgba(255,245,218,0.80);
+}
+body[data-theme="dark"] .privacy-modal-body tr:nth-child(even) td {
+    background: rgba(255,255,255,0.03);
+}
+body[data-theme="dark"] .privacy-modal-body ul li { color: rgba(255,245,218,0.80); }
+body[data-theme="dark"] .privacy-tag {
+    background: rgba(194,108,29,0.20);
+    color: rgba(255,185,90,0.90);
+}
+
