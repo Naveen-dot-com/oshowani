@@ -144,7 +144,11 @@ function loadChat(chatId) {
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
     if (conversationHistory.length <= 2) {
-        addMessageToDOM("Ha!\n\nThe seeker has arrived... and the master is waiting.\n\nAsk.", false);
+        addMessageToDOM("Namaste.\n\n" +
+            "This is Oshowani — an AI companion inspired by\n" +
+            "the wisdom of Osho's teachings on meditation,\n" +
+            "awareness, love, and freedom.\n\n" +
+            "Every question is a doorway. Step in.", false);
     } else {
         conversationHistory.forEach((msg, idx) => {
             if (idx === 0) return;
@@ -164,7 +168,11 @@ function startNewChat() {
     activeChatId = chat.id;
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
-    addMessageToDOM("Ha!\n\nThe seeker has arrived... and the master is waiting.\n\nAsk.", false);
+    addMessageToDOM("Namaste.\n\n" +
+            "This is Oshowani — an AI companion inspired by\n" +
+            "the wisdom of Osho's teachings on meditation,\n" +
+            "awareness, love, and freedom.\n\n" +
+            "Every question is a doorway. Step in.", false);
     renderHistoryList();
     closeHistorySidebar();
     scrollToBottom();
