@@ -524,8 +524,10 @@ function addMessageToDOM(text, isUser) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + (isUser ? 'user-message' : 'osho-message');
     let formatted = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/__(.*?)__/g, '<strong>$1</strong>');
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // **bold**
+        .replace(/__(.*?)__/g, '<strong>$1</strong>')       // __bold__
+        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')       // *single star* → also bold
+        .replace(/_(.*?)_/g, '<em>$1</em>');                // _underscore_ → italic
     const paragraphs = formatted.split(/\n\n+/);
     msgDiv.innerHTML = `<div class="message-content">${paragraphs.map(p =>
         `<p>${p.replace(/\n/g, '<br>')}</p>`
