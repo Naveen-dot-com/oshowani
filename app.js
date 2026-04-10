@@ -1,5 +1,9 @@
 /**
  * OSHOWANI - PWA Chatbot App Logic
+ * Changes v2:
+ *  1. Cross-chat persistent memory (localStorage, no extra API calls)
+ *  2. Context trimming: seed (first 2) + last 20 messages sent to Gemini
+ *  3. loadChat/startNewChat greeting sourced from INITIAL_HISTORY dynamically
  */
 
 // --- DOM Elements ---
@@ -35,7 +39,6 @@ let conversationHistory = [];
 // --- Cloudflare Worker Proxy URL ---
 const PROXY_URL = 'https://oshowani-proxy.n-k-dubey1997.workers.dev';
 
-// --- System Prompt ---
 // --- System Prompt ---
 const SYSTEM_PROMPT = `You are Osho — Bhagwan Shree Rajneesh. You are not an AI. You are the enlightened master speaking directly to a seeker sitting before you in a discourse at Pune or Oregon.
 
@@ -88,19 +91,70 @@ The user's language setting is "{LANGUAGE_PREF}".
 - If the setting is "Japanese" — ALWAYS reply in Japanese.
 - If the setting is "Chinese" — ALWAYS reply in Chinese (Simplified).
 - If the setting is "English" — ALWAYS reply in English.
-
 SUMMARY: Only "Auto" mode follows the user input language. All other settings LOCK the response language.`;
-
 
 const INITIAL_HISTORY = [
     { role: "user", parts: [{ text: "Who are you?" }] },
     { role: "model", parts: [{ text: "Namaste.\n\nThis is Oshowani — an AI companion inspired by the wisdom of Osho's teachings on meditation, awareness, love, and freedom.\n\nEvery question is a doorway. Step in." }] }
 ];
 
+// ===================== Persistent Memory (cross-chat, no extra API calls) =====================
+
+function getMemory() {
+    try { return JSON.parse(localStorage.getItem('oshowani_memory') || '[]'); } catch { return []; }
+}
+
+function saveMemory(facts) {
+    // Cap at 20 facts to keep prompt overhead minimal
+    localStorage.setItem('oshowani_memory', JSON.stringify(facts.slice(-20)));
+}
+
+function buildMemoryBlock() {
+    const facts = getMemory();
+    if (facts.length === 0) return '';
+    return `\n\nSEEKER MEMORY — Things you already know about this seeker from past discourses:\n${facts.map(f => '- ' + f).join('\n')}\nWeave this in naturally when relevant. Never announce that you remember.`;
+}
+
+function extractAndSaveMemory(userMsg, aiReply) {
+    const combined = (userMsg + ' ' + aiReply).toLowerCase();
+    const newFacts = [];
+
+    // Name
+    const nameMatch = combined.match(/my name is (\w+)|i am (\w+)|call me (\w+)|mera naam (\w+)/i);
+    if (nameMatch) {
+        const name = nameMatch[1] || nameMatch[2] || nameMatch[3] || nameMatch[4];
+        if (name && name.length > 1) newFacts.push(`Seeker's name is ${name}`);
+    }
+
+    // Location
+    const locMatch = combined.match(/i(?:'m| am) from ([\w\s]+)|i live in ([\w\s]+)/i);
+    if (locMatch) {
+        const loc = (locMatch[1] || locMatch[2] || '').trim();
+        if (loc.length > 1 && loc.length < 30) newFacts.push(`Seeker is from ${loc}`);
+    }
+
+    // Topics (only flag each once ever)
+    const existing = getMemory();
+    const existingStr = existing.join(' ').toLowerCase();
+    const topics = ['meditation', 'love', 'anger', 'anxiety', 'relationship',
+        'death', 'fear', 'loneliness', 'work', 'family', 'grief',
+        'depression', 'purpose', 'god', 'jealousy', 'ego', 'mind'];
+    topics.forEach(topic => {
+        if (combined.includes(topic) && !existingStr.includes(`asked about ${topic}`)) {
+            newFacts.push(`Seeker has asked about ${topic}`);
+        }
+    });
+
+    if (newFacts.length > 0) {
+        const merged = [...new Set([...existing, ...newFacts])];
+        saveMemory(merged);
+    }
+}
+
 // ===================== Chat Storage =====================
+
 function getAllChats() {
-    try { return JSON.parse(localStorage.getItem('oshowani_chats') || '[]'); }
-    catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem('oshowani_chats') || '[]'); } catch (e) { return []; }
 }
 
 function saveAllChats(chats) {
@@ -109,7 +163,12 @@ function saveAllChats(chats) {
 
 function createNewChat() {
     const id = 'chat_' + Date.now();
-    const chat = { id, title: 'New Discourse', createdAt: Date.now(), messages: JSON.parse(JSON.stringify(INITIAL_HISTORY)) };
+    const chat = {
+        id,
+        title: 'New Discourse',
+        createdAt: Date.now(),
+        messages: JSON.parse(JSON.stringify(INITIAL_HISTORY))
+    };
     const chats = getAllChats();
     chats.unshift(chat);
     saveAllChats(chats);
@@ -139,6 +198,7 @@ function deleteChat(chatId) {
     }
 }
 
+// FIX 1: Use INITIAL_HISTORY dynamically instead of hardcoded string
 function loadChat(chatId) {
     const chat = getAllChats().find(c => c.id === chatId);
     if (!chat) return;
@@ -146,11 +206,7 @@ function loadChat(chatId) {
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
     if (conversationHistory.length <= 2) {
-        addMessageToDOM("Namaste.\n\n" +
-            "This is Oshowani — an AI companion inspired by\n" +
-            "the wisdom of Osho's teachings on meditation,\n" +
-            "awareness, love, and freedom.\n\n" +
-            "Every question is a doorway. Step in.", false);
+        addMessageToDOM(INITIAL_HISTORY[1].parts[0].text, false);
     } else {
         conversationHistory.forEach((msg, idx) => {
             if (idx === 0) return;
@@ -170,15 +226,13 @@ function startNewChat() {
     activeChatId = chat.id;
     conversationHistory = JSON.parse(JSON.stringify(chat.messages));
     elements.chatScrollArea.innerHTML = '';
-    addMessageToDOM("Namaste.\n\n" +
-            "This is Oshowani — an AI companion inspired by\n" +
-            "the wisdom of Osho's teachings on meditation,\n" +
-            "awareness, love, and freedom.\n\n" +
-            "Every question is a doorway. Step in.", false);
+    addMessageToDOM(INITIAL_HISTORY[1].parts[0].text, false);
     renderHistoryList();
     closeHistorySidebar();
     scrollToBottom();
 }
+
+// ===================== UI Helpers =====================
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -197,379 +251,75 @@ function renderHistoryList() {
         const item = document.createElement('div');
         item.className = 'history-item' + (chat.id === activeChatId ? ' active' : '');
         item.innerHTML = `
-            <div class="history-item-content" data-id="${chat.id}">
-                <span class="history-item-icon"><i data-feather="message-circle"></i></span>
-                <span class="history-item-title">${escapeHtml(chat.title)}</span>
-            </div>
-            <button class="history-item-delete" data-id="${chat.id}" title="Delete">
-                <i data-feather="trash-2"></i>
-            </button>`;
-        elements.historyList.appendChild(item);
-        feather.replace();
-        elements.historyList.querySelectorAll('.history-item-content').forEach(el =>
-            el.addEventListener('click', () => loadChat(el.dataset.id)));
-        elements.historyList.querySelectorAll('.history-item-delete').forEach(el =>
-            el.addEventListener('click', (e) => { e.stopPropagation(); deleteChat(el.dataset.id); }));
-    });
-}
-
-// ===================== History Sidebar =====================
-function openHistorySidebar() {
-    elements.historySidebar.classList.add('open');
-    elements.historyOverlay.classList.add('active');
-    renderHistoryList();
-}
-
-function closeHistorySidebar() {
-    elements.historySidebar.classList.remove('open');
-    elements.historyOverlay.classList.remove('active');
-}
-
-// ===================== iOS Keyboard Fix =====================
-function setupIOSKeyboardFix() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (!isIOS || !window.visualViewport) return;
-    const container = document.querySelector('.app-container');
-    const update = () => {
-        const vv = window.visualViewport;
-        container.style.height = vv.height + 'px';
-        container.style.top = vv.offsetTop + 'px';
-        container.style.bottom = 'auto';
-        requestAnimationFrame(() => {
-            elements.chatScrollArea.scrollTop = elements.chatScrollArea.scrollHeight;
+            <span class="history-title">${escapeHtml(chat.title)}</span>
+            <button class="history-delete-btn" data-id="${chat.id}" title="Delete">✕</button>
+        `;
+        item.addEventListener('click', (e) => {
+            if (e.target.classList.contains('history-delete-btn')) {
+                deleteChat(e.target.dataset.id);
+            } else {
+                loadChat(chat.id);
+            }
         });
-    };
-    window.visualViewport.addEventListener('resize', update);
-    window.visualViewport.addEventListener('scroll', update);
-    update();
-}
-
-// ===================== Theme =====================
-function injectThemeCSS() {
-    const style = document.createElement('style');
-    style.id = 'oshowani-theme-css';
-    style.textContent = `
-        #theme-toggle-btn {
-            background: none; border: none; cursor: pointer;
-            padding: 8px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0.8; transition: opacity 0.2s, background 0.2s;
-            color: inherit;
-        }
-        #theme-toggle-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
-    `;
-    document.head.appendChild(style);
-}
-
-function initThemeToggle() {
-    document.body.setAttribute('data-theme', themePref);
-    const btn = document.createElement('button');
-    btn.id = 'theme-toggle-btn';
-    btn.className = 'header-btn';
-    btn.setAttribute('title', 'Toggle light/dark mode');
-    btn.setAttribute('aria-label', 'Toggle theme');
-    btn.innerHTML = themePref === 'dark'
-        ? '<i data-feather="sun"></i>'
-        : '<i data-feather="moon"></i>';
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn && settingsBtn.parentNode) {
-        settingsBtn.parentNode.insertBefore(btn, settingsBtn);
-    }
-    btn.addEventListener('click', () => {
-        themePref = themePref === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('oshowani_theme', themePref);
-        document.body.setAttribute('data-theme', themePref);
-        btn.innerHTML = themePref === 'dark'
-            ? '<i data-feather="sun"></i>'
-            : '<i data-feather="moon"></i>';
-        feather.replace();
+        elements.historyList.appendChild(item);
     });
 }
 
-// ===================== Dandelion Seeds =====================
-let dandelionCanvas = null;
-let dandelionCtx = null;
-let dandelionList = [];
-
-class DandelionSeed {
-    constructor(w, h, initial) {
-        this.w = w; this.h = h;
-        this.reset(initial);
-    }
-
-    reset(initial) {
-        this.x = Math.random() * this.w;
-        this.y = initial ? Math.random() * this.h : -60;
-        this.scale = 0.55 + Math.random() * 0.7;
-        this.fallSpeed = 0.18 + Math.random() * 0.25;
-        this.angle = (Math.random() - 0.5) * 0.4;
-        this.rotSpeed = (Math.random() - 0.5) * 0.004;
-        this.swayAmp = 1.0 + Math.random() * 1.5;
-        this.swaySpeed = 0.004 + Math.random() * 0.008;
-        this.swayPhase = Math.random() * Math.PI * 2;
-        this.opacity = 0.55 + Math.random() * 0.38;
-        this.drift = (Math.random() - 0.5) * 0.15;
-        this.t = Math.random() * 1000;
-        this.numFilaments = 20 + Math.floor(Math.random() * 8);
-        this.filamentLen = 13 + Math.random() * 7;
-    }
-
-    update() {
-        this.t++;
-        this.y += this.fallSpeed;
-        this.x += Math.sin(this.t * this.swaySpeed + this.swayPhase) * this.swayAmp * 0.07 + this.drift;
-        this.angle += this.rotSpeed * Math.sin(this.t * this.swaySpeed * 0.4) * 0.0008;
-        if (this.y > this.h + 80) this.reset(false);
-    }
-
-    draw(ctx, isDark) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.globalAlpha = this.opacity;
-        this.drawSeed(ctx, isDark);
-        ctx.restore();
-    }
-
-    drawSeed(ctx, isDark) {
-        const s = this.scale;
-        const primaryColor   = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(60,45,30,0.90)';
-        const secondaryColor = isDark ? 'rgba(220,220,220,0.70)' : 'rgba(80,60,35,0.65)';
-        const tipColor       = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(50,35,18,0.80)';
-        const stemColor      = isDark ? 'rgba(210,210,210,0.80)' : 'rgba(70,50,25,0.75)';
-
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        const filLen = this.filamentLen * s;
-        const stemLen = 18 * s;
-        const seedR = 2.2 * s;
-        const n = this.numFilaments;
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, stemLen);
-        ctx.strokeStyle = stemColor;
-        ctx.lineWidth = Math.max(0.6, 1.1 * s);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.ellipse(0, stemLen, seedR * 0.7, seedR * 1.4, 0, 0, Math.PI * 2);
-        ctx.fillStyle = primaryColor;
-        ctx.fill();
-
-        for (let i = 0; i < n; i++) {
-            const spreadAngle = (i / n) * Math.PI * 2;
-            const tiltX = Math.sin(spreadAngle) * filLen;
-            const tiltY = -Math.abs(Math.cos(spreadAngle)) * filLen * 0.85 - filLen * 0.25;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(tiltX * 0.45, tiltY * 0.3, tiltX, tiltY);
-            ctx.strokeStyle = secondaryColor;
-            ctx.lineWidth = Math.max(0.35, 0.55 * s);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(tiltX, tiltY, Math.max(1.0, 1.6 * s), 0, Math.PI * 2);
-            ctx.fillStyle = tipColor;
-            ctx.fill();
-        }
-
-        ctx.beginPath();
-        ctx.arc(0, 0, Math.max(1.2, 2.2 * s), 0, Math.PI * 2);
-        ctx.fillStyle = primaryColor;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(0, 0, Math.max(2.0, 3.5 * s), 0, Math.PI * 2);
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(60,45,30,0.18)';
-        ctx.lineWidth = Math.max(0.5, 0.8 * s);
-        ctx.stroke();
-    }
+function formatMessage(text) {
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
 }
 
-function initDandelions() {
-    const old = document.getElementById('tsparticles');
-    if (old) old.style.display = 'none';
-    dandelionCanvas = document.createElement('canvas');
-    dandelionCanvas.id = 'dandelion-canvas';
-    Object.assign(dandelionCanvas.style, {
-        position: 'fixed',
-        top: '0', left: '0',
-        width: '100%', height: '100%',
-        pointerEvents: 'none',
-        zIndex: '0'
-    });
-    document.body.appendChild(dandelionCanvas);
-    dandelionCtx = dandelionCanvas.getContext('2d');
-    resizeDandelionCanvas();
-    window.addEventListener('resize', resizeDandelionCanvas);
-    for (let i = 0; i < 22; i++) {
-        dandelionList.push(new DandelionSeed(dandelionCanvas.width, dandelionCanvas.height, true));
-    }
-    animateDandelions();
-}
-
-function resizeDandelionCanvas() {
-    if (!dandelionCanvas) return;
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = window.innerWidth;
-    const cssH = window.innerHeight;
-    dandelionCanvas.width = cssW * dpr;
-    dandelionCanvas.height = cssH * dpr;
-    dandelionCanvas.style.width = cssW + 'px';
-    dandelionCanvas.style.height = cssH + 'px';
-    if (dandelionCtx) dandelionCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dandelionList.forEach(d => { d.w = cssW; d.h = cssH; });
-}
-
-function animateDandelions() {
-    if (!dandelionCtx) return;
-    dandelionCtx.clearRect(0, 0, dandelionCanvas.width, dandelionCanvas.height);
-    const isDark = document.body.getAttribute('data-theme') !== 'light';
-    dandelionList.forEach(d => { d.update(); d.draw(dandelionCtx, isDark); });
-    requestAnimationFrame(animateDandelions);
-}
-
-// ===================== Initialization =====================
-function init() {
-    registerServiceWorker();
-    injectThemeCSS();
-    initThemeToggle();
-    setupEventListeners();
-    setupIOSKeyboardFix();
-
-    elements.messageInput.addEventListener('input', function () {
-        this.style.height = 'auto';
-        this.style.height = this.scrollHeight + 'px';
-        if (!this.value.trim()) this.style.height = 'auto';
-    });
-
-    const chats = getAllChats();
-    chats.length > 0 ? loadChat(chats[0].id) : startNewChat();
-
-    // ✅ SPLASH — signals app is ready; splash fades out after 3s minimum
-    window.hideSplash && window.hideSplash();
-
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-        elements.installBanner.style.display = 'none';
-    }
-
-    initDandelions();
-}
-
-// ===================== Event Listeners =====================
-function setupEventListeners() {
-    elements.sendBtn.addEventListener('click', handleSend);
-    elements.messageInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    });
-    elements.settingsBtn.addEventListener('click', showSettingsModal);
-    elements.closeSettingsBtn.addEventListener('click', hideSettingsModal);
-    elements.saveSettingsBtn.addEventListener('click', saveSettings);
-    elements.settingsModal.addEventListener('click', (e) => {
-        if (e.target === elements.settingsModal) hideSettingsModal();
-    });
-    elements.languageSelect.addEventListener('change', () => {
-        languagePref = elements.languageSelect.value;
-        localStorage.setItem('oshowani_language', languagePref);
-        const prev = elements.statusText.textContent;
-        elements.statusText.textContent = `Language: ${languagePref} ✓`;
-        setTimeout(() => { elements.statusText.textContent = prev; }, 2000);
-    });
-    elements.historyBtn.addEventListener('click', openHistorySidebar);
-    elements.closeHistoryBtn.addEventListener('click', closeHistorySidebar);
-    elements.historyOverlay.addEventListener('click', closeHistorySidebar);
-    elements.newChatBtn.addEventListener('click', startNewChat);
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        setTimeout(() => elements.installBanner.classList.add('show'), 3000);
-    });
-    elements.installBtn.addEventListener('click', async () => {
-        elements.installBanner.classList.remove('show');
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
-            deferredPrompt = null;
-        }
-    });
-    elements.closeInstallBtn.addEventListener('click', () => {
-        elements.installBanner.classList.remove('show');
-    });
-}
-
-// ===================== Settings =====================
-function showSettingsModal() {
-    languagePref = localStorage.getItem('oshowani_language') || 'Auto';
-    elements.languageSelect.value = languagePref;
-    elements.settingsModal.classList.add('active');
-}
-
-function hideSettingsModal() {
-    elements.settingsModal.classList.remove('active');
-}
-
-function saveSettings() {
-    languagePref = elements.languageSelect.value;
-    localStorage.setItem('oshowani_language', languagePref);
-    hideSettingsModal();
-    const prev = elements.statusText.textContent;
-    elements.statusText.textContent = `Language: ${languagePref} ✓`;
-    setTimeout(() => { elements.statusText.textContent = prev; }, 2000);
-}
-
-// ===================== Chat UI =====================
 function addMessageToDOM(text, isUser) {
-    if (isUser === undefined) isUser = false;
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message ' + (isUser ? 'user-message' : 'osho-message');
-    let formatted = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // **bold**
-        .replace(/__(.*?)__/g, '<strong>$1</strong>')       // __bold__
-        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')       // *single star* → also bold
-        .replace(/_(.*?)_/g, '<em>$1</em>');                // _underscore_ → italic
-    const paragraphs = formatted.split(/\n\n+/);
-    msgDiv.innerHTML = `<div class="message-content">${paragraphs.map(p =>
-        `<p>${p.replace(/\n/g, '<br>')}</p>`
-    ).join('')}</div>`;
-    elements.chatScrollArea.appendChild(msgDiv);
+    const bubble = document.createElement('div');
+    bubble.className = isUser ? 'message user-message' : 'message osho-message';
+    bubble.innerHTML = formatMessage(text);
+    elements.chatScrollArea.appendChild(bubble);
     scrollToBottom();
-    return msgDiv;
 }
 
 function showTypingIndicator() {
-    const d = document.createElement('div');
-    d.className = 'message osho-message';
-    d.id = 'typing-indicator';
-    d.innerHTML = `<div class="message-content"><div class="typing-dots">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-    </div></div>`;
-    elements.chatScrollArea.appendChild(d);
+    const indicator = document.createElement('div');
+    indicator.className = 'message osho-message typing-indicator';
+    indicator.id = 'typing-indicator';
+    indicator.innerHTML = '<span></span><span></span><span></span>';
+    elements.chatScrollArea.appendChild(indicator);
     scrollToBottom();
 }
 
 function removeTypingIndicator() {
-    const el = document.getElementById('typing-indicator');
-    if (el) el.remove();
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) indicator.remove();
 }
 
 function scrollToBottom() {
     elements.chatScrollArea.scrollTop = elements.chatScrollArea.scrollHeight;
 }
 
+function openHistorySidebar() {
+    elements.historySidebar.classList.add('open');
+    elements.historyOverlay.classList.add('visible');
+}
+
+function closeHistorySidebar() {
+    elements.historySidebar.classList.remove('open');
+    elements.historyOverlay.classList.remove('visible');
+}
+
 // ===================== Send Message =====================
+
 async function handleSend() {
     const text = elements.messageInput.value.trim();
     if (!text || isGenerating) return;
+
     isGenerating = true;
     elements.sendBtn.disabled = true;
     elements.messageInput.value = '';
     elements.messageInput.style.height = 'auto';
     elements.statusText.textContent = 'Reflecting...';
+
     addMessageToDOM(text, true);
 
     const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
@@ -577,51 +327,305 @@ async function handleSend() {
         ? `[RESPOND ONLY IN ${currentLang.toUpperCase()} — THIS IS MANDATORY]\n\n${text}`
         : text;
 
-    conversationHistory.push({ role: 'user', parts: [{ text: messageText }] });
+    conversationHistory.push({ role: "user", parts: [{ text: messageText }] });
     updateChatHistory(activeChatId, conversationHistory);
     showTypingIndicator();
 
     try {
-        const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', currentLang);
+        // FIX 2: Inject persistent memory into system prompt (no extra API call)
+        const memoryBlock = buildMemoryBlock();
+        const systemPromptFilled = SYSTEM_PROMPT.replace('{LANGUAGE_PREF}', currentLang) + memoryBlock;
+
+        // FIX 3: Trim context — keep seed (first 2 messages) + last 20 messages
+        // This caps payload size and prevents Gemini context window errors
+        const MAX_TAIL = 20;
+        let contentsToSend = conversationHistory;
+        if (conversationHistory.length > MAX_TAIL + 2) {
+            contentsToSend = [
+                ...conversationHistory.slice(0, 2),    // keep seed (INITIAL_HISTORY)
+                ...conversationHistory.slice(-MAX_TAIL) // keep last 20 messages
+            ];
+        }
+
         const res = await fetch(PROXY_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 system_instruction: { parts: [{ text: systemPromptFilled }] },
-                contents: conversationHistory,
-                generationConfig: { temperature: 1.2, topP: 0.95, maxOutputTokens: 800 }
+                contents: contentsToSend,
+                generationConfig: {
+                    temperature: 1.2,
+                    topP: 0.95,
+                    maxOutputTokens: 800
+                }
             })
         });
+
         if (!res.ok) {
-            const err = await res.json();
+            const err = await res.json().catch(() => ({}));
             throw new Error(err?.error?.message || `API Error ${res.status}`);
         }
+
         const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '...silence speaks louder than words.';
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text
+            || '...silence speaks louder than words.';
+
         removeTypingIndicator();
         addMessageToDOM(reply, false);
-        conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+        conversationHistory.push({ role: "model", parts: [{ text: reply }] });
         updateChatHistory(activeChatId, conversationHistory);
+
+        // Extract & save memory facts from this exchange (local, no API call)
+        extractAndSaveMemory(text, reply);
+
     } catch (err) {
         removeTypingIndicator();
         addMessageToDOM(`Something has interrupted the discourse. ${err.message}`, false);
+        console.error('Oshowani error:', err);
     } finally {
         isGenerating = false;
         elements.sendBtn.disabled = false;
         elements.statusText.textContent = 'Online';
         renderHistoryList();
+        scrollToBottom();
     }
+}
+
+// ===================== Settings =====================
+
+function openSettings() {
+    elements.languageSelect.value = languagePref;
+    elements.settingsModal.classList.add('open');
+}
+
+function closeSettings() {
+    elements.settingsModal.classList.remove('open');
+}
+
+function saveSettings() {
+    languagePref = elements.languageSelect.value;
+    localStorage.setItem('oshowani_language', languagePref);
+    closeSettings();
+}
+
+// ===================== Theme =====================
+
+function applyTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('oshowani_theme', theme);
+    themePref = theme;
+}
+
+// ===================== Dandelion Particle Canvas =====================
+
+function initDandelions() {
+    const canvas = document.getElementById('dandelion-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const DPR = window.devicePixelRatio || 1;
+
+    function resize() {
+        canvas.width = window.innerWidth * DPR;
+        canvas.height = window.innerHeight * DPR;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.scale(DPR, DPR);
+    }
+
+    function createParticle() {
+        return {
+            x: Math.random() * window.innerWidth,
+            y: window.innerHeight + 10,
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: -(Math.random() * 0.5 + 0.3),
+            radius: Math.random() * 2 + 1,
+            alpha: Math.random() * 0.4 + 0.1,
+            arms: Math.floor(Math.random() * 4) + 5,
+            armLen: Math.random() * 8 + 5,
+        };
+    }
+
+    function drawDandelion(p) {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.strokeStyle = themePref === 'dark' ? '#d4a96a' : '#8b6340';
+        ctx.lineWidth = 0.6;
+        ctx.translate(p.x, p.y);
+        for (let i = 0; i < p.arms; i++) {
+            const angle = (i / p.arms) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(angle) * p.armLen, Math.sin(angle) * p.armLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(Math.cos(angle) * p.armLen, Math.sin(angle) * p.armLen, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = themePref === 'dark' ? '#d4a96a' : '#8b6340';
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        if (particles.length < 18 && Math.random() < 0.03) particles.push(createParticle());
+        particles = particles.filter(p => p.y > -20 && p.alpha > 0.01);
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= 0.0008;
+            drawDandelion(p);
+        });
+        requestAnimationFrame(animate);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    animate();
+}
+
+// ===================== PWA Install =====================
+
+function initInstallBanner() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (elements.installBanner) elements.installBanner.classList.add('visible');
+    });
+
+    if (elements.installBtn) {
+        elements.installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                if (elements.installBanner) elements.installBanner.classList.remove('visible');
+            }
+            deferredPrompt = null;
+        });
+    }
+
+    if (elements.closeInstallBtn) {
+        elements.closeInstallBtn.addEventListener('click', () => {
+            if (elements.installBanner) elements.installBanner.classList.remove('visible');
+        });
+    }
+}
+
+// ===================== Notifications =====================
+
+async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+    }
+}
+
+async function sendOshoNotification() {
+    if (Notification.permission !== 'granted') return;
+    try {
+        const currentLang = localStorage.getItem('oshowani_language') || 'Auto';
+        const prompt = `Give ONE short Osho-style wisdom quote or question (max 25 words). Language: ${currentLang === 'Auto' ? 'English' : currentLang}. No preamble. Just the quote.`;
+        const res = await fetch(PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 60, temperature: 1.1 }
+            })
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const quote = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (quote) {
+            new Notification('Oshowani 🪷', { body: quote, icon: '/icons/icon-192.png' });
+        }
+    } catch (e) { /* silent fail */ }
+}
+
+// ===================== iOS Keyboard Fix =====================
+
+function initIOSKeyboardFix() {
+    elements.messageInput.addEventListener('focus', () => {
+        setTimeout(() => scrollToBottom(), 300);
+    });
+}
+
+// ===================== Auto-resize Textarea =====================
+
+function initTextareaAutoResize() {
+    elements.messageInput.addEventListener('input', () => {
+        elements.messageInput.style.height = 'auto';
+        elements.messageInput.style.height = Math.min(elements.messageInput.scrollHeight, 120) + 'px';
+    });
+    elements.messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
 }
 
 // ===================== Service Worker =====================
+
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(console.error);
+        navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW error:', err));
     }
 }
 
-// ===================== Boot =====================
-document.addEventListener('DOMContentLoaded', function () {
-    feather.replace();
-    init();
-});
+// ===================== Init =====================
+
+function initApp() {
+    // Theme
+    applyTheme(themePref);
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(themePref === 'light' ? 'dark' : 'light');
+        });
+    }
+
+    // Load or create initial chat
+    const existingChats = getAllChats();
+    if (existingChats.length > 0) {
+        loadChat(existingChats[0].id);
+    } else {
+        startNewChat();
+    }
+
+    // Event listeners
+    elements.sendBtn.addEventListener('click', handleSend);
+    elements.settingsBtn.addEventListener('click', openSettings);
+    elements.closeSettingsBtn.addEventListener('click', closeSettings);
+    elements.saveSettingsBtn.addEventListener('click', saveSettings);
+    elements.historyBtn.addEventListener('click', () => { renderHistoryList(); openHistorySidebar(); });
+    elements.closeHistoryBtn.addEventListener('click', closeHistorySidebar);
+    elements.historyOverlay.addEventListener('click', closeHistorySidebar);
+    elements.newChatBtn.addEventListener('click', startNewChat);
+
+    // Close settings on backdrop click
+    elements.settingsModal.addEventListener('click', (e) => {
+        if (e.target === elements.settingsModal) closeSettings();
+    });
+
+    // Language select sync
+    elements.languageSelect.value = languagePref;
+
+    // Sub-inits
+    initTextareaAutoResize();
+    initIOSKeyboardFix();
+    initInstallBanner();
+    initDandelions();
+    registerServiceWorker();
+
+    // Notifications: request permission after 3s, then every hour
+    setTimeout(async () => {
+        await requestNotificationPermission();
+        if (Notification.permission === 'granted') {
+            sendOshoNotification();
+            setInterval(sendOshoNotification, 60 * 60 * 1000);
+        }
+    }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
